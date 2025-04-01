@@ -46,9 +46,9 @@ SECTION MBR vstart=0x7c00
     mov byte [gs:0x08], 'R'
     mov byte [gs:0x09], 0xA4
 
-    mov  ax, LOADER_START_SECTOR_ADDR_IN_DISK
-    mov  bx, LOADER_BASE_ADDR_IN_MEM
-    mov  cx, LOADER_READ_SECTOR_NUM
+    mov  eax, LOADER_START_SECTOR_ADDR_IN_DISK
+    mov  bx,  LOADER_BASE_ADDR_IN_MEM
+    mov  cx,  LOADER_READ_SECTOR_NUM
     call rd_disk_m_16
 ; -------------------------------------
 ;   读取磁盘的第n个扇区
@@ -63,13 +63,29 @@ rd_disk_m_16:
     mov al,  cl
     out dx,  al
     mov eax, esi
-    ; LBA 寄存器(28 bit) 确定扇区地址
-    ; 配置 LBA 0-7位
+    ; LBA 寄存器(28 bit) 确定扇区地址 LOADER_START_SECTOR_ADDR_IN_DISK 此处为 0x2 其实后面用不到
+    ; 写入端口 0x1f3 配置 LBA 0-7位 (8 bit)
     mov dx,  0x1f3
     out dx,  al
-    ; 配置 LBA 8-15位 shr(shift right) 右移操作获取高位
+    ; 写入端口 0x1f4 配置 LBA 8-15位 (8 bit) shr(shift right) 右移操作获取高位
     mov dx,  0x1f4
     shr eax, 8
+    out dx,  al
+    ; 写入端口 0x1f5 配置 LBA 16-23位 (8 bit)
+    mov dx,  0x1f5
+    shr eax, 8
+    out dx,  al
+    ; 写入端口 0x1f6 设置 device 寄存器的状态 里面包含磁盘寻址模式、LBA的24-27位(4 bit) 地址设置
+    mov dx,  0x1f6
+    shr eax, 8
+    ; 此处筛出 8 bit 中的后 4 位
+    and al,  0x0f
+    ; 根据 device 寄存器的设置 高 4 位的二进制码为 1110
+    or  al,  0xe0
+    out dx,  al
+    ; 写入端口  0x1f7 设置 commend 寄存器 读取扇区命令
+    mov dx,  0x1f7
+    mov al,  0x20
     out dx,  al
 
 
