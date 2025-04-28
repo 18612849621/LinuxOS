@@ -8,8 +8,9 @@ dd if=boot/mbr.bin of=sys.img bs=512 count=1 conv=notrunc
 # load to hd
 ## mbr
 dd if=boot/mbr.bin of=hd60.img bs=512 count=1 conv=notrunc
-## 程序
-dd if=boot/mbr.bin of=hd60.img bs=512 count=1 seek=2 conv=notrunc
+## 程序 loader 跳过 2 个扇区放入 
+dd if=boot/loader.bin of=hd60.img bs=512 count=4 seek=2 conv=notrunc
+bximage 创建硬盘
 
 ```
 ## 基础知识
@@ -28,17 +29,17 @@ xxd -s 1024 -l 512 文件名
 ```
 ### 硬盘配置
 
-| 参数         | 描述                                      |
-|--------------|-------------------------------------------|
-| `ata0-master` | 指定硬盘连接到 ATA0 的主端口（主设备）。         |
-| `type=disk`   | 表示连接的是硬盘。                           |
-| `path`        | 硬盘映像文件的路径。                        |
+| 参数          | 描述                                                                    |
+| ------------- | ----------------------------------------------------------------------- |
+| `ata0-master` | 指定硬盘连接到 ATA0 的主端口（主设备）。                                |
+| `type=disk`   | 表示连接的是硬盘。                                                      |
+| `path`        | 硬盘映像文件的路径。                                                    |
 | `mode=flat`   | 指定硬盘映像的模式，可以是 `flat`（扁平模式）或 `dynamic`（动态模式）。 |
-| `cylinders`   | 磁盘的柱面数（Cylinders）。                   |
-| `heads`       | 磁盘的磁头数（Heads）。                     |
-| `spt`         | 每个轨道的扇区数（Sectors per track）。       |
-| 扇区数        | 扇区数 = `cylinders * heads * spt`。        |
-| 设备大小      | 设备可访问的总大小: 扇区数 * 扇区大小。      |
+| `cylinders`   | 磁盘的柱面数（Cylinders）。                                             |
+| `heads`       | 磁盘的磁头数（Heads）。                                                 |
+| `spt`         | 每个轨道的扇区数（Sectors per track）。                                 |
+| 扇区数        | 扇区数 = `cylinders * heads * spt`。                                    |
+| 设备大小      | 设备可访问的总大小: 扇区数 * 扇区大小。                                 |
 
 ## 汇编指南
 
@@ -49,8 +50,9 @@ in 和 out 的数据流动都是右->左 比如 in / out A, B 都是B流向A
 
 ### 基础数据类型
 
-| 指令 | 名称               | 描述                      |
-|------|--------------------|---------------------------|
-| `db` | Define Byte        | 定义字节，通常为 8 位      |
-| `dw` | Define Word        | 定义字，通常为 16 位      |
-| `dd` | Define Double Word | 定义双字，通常为 32 位    |
+| 指令 | 名称               | 描述                   |
+| ---- | ------------------ | ---------------------- |
+| `db` | Define Byte        | 定义字节，通常为 8 位  |
+| `dw` | Define Word        | 定义字，通常为 16 位   |
+| `dd` | Define Double Word | 定义双字，通常为 32 位 |
+| `dq` | Define quadword    | 定义四字，通常为 64 位 |

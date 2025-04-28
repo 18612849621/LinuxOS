@@ -6,6 +6,7 @@ LOADER_BASE_ADDR_IN_MEM          equ 0x900
 ; loader 准备读入的扇区数目
 LOADER_READ_SECTOR_NUM           equ 4
 ; -------- gdt 描述符属性 --------
+    ; DATA 是数据段 CODE 是代码段 VIDEO 是显存段
     ; -------------高地址--------------
     ; 位的索引是从 0 开始 即第 1 位是 0
     ; 23 位(G) 两种模式 字节 / 4KB 此处设置为 4KB
@@ -31,8 +32,28 @@ LOADER_READ_SECTOR_NUM           equ 4
     DESC_S_CODE      equ 00_0000000000_0000000100_0000000000b
     DESC_S_DATA      equ 00_0000000000_0000000100_0000000000b
     DESC_S_SYSTEM    equ 00_0000000000_0000000000_0000000000b
-    ; 11 ~ 8 位(TYPE) 非系统段( S 为 0 包含代码段/数据段)只有 3 种状态码，只使用 11 ～ 9 位，8 位需要默认为 0
+    ; 11 ~ 8 位(TYPE) 非系统段( S 为 1 包含代码段/数据段)只有 3 种状态码，只使用 11 ～ 9 位，8 位需要默认为 0
     ; 代码段 X: 可执行 R: 可读 C: 一致性代码段
     ; 数据段(默认可读) X: 可执行 W: 可写 E: E 为 0 表示向上扩展，即地址越来越高，通常用于代码段和数据段。E 为 1 表示向下扩展，地址越来越低，通常用于栈段
     DESC_TYPE_CODE   equ 00_0000000000_0000000010_0000000000b
     DESC_TYPE_DATA   equ 00_0000000000_0000000000_1000000000b
+    ; -------------------段地址-----------------
+    ; _x x代表的是字节的个数 
+    ; _HIGH / _LOW 代表的是高地址 / 低地址
+    DESC_CODE_HIGH_4 equ (0x00 + (0x00 << 24) + DESC_S_CODE + DESC_TYPE_CODE + \
+                          DESC_P_1 + DESC_DPL_0 + DESC_G_4K + DESC_D_32 + DESC_L_32 + \
+                          DESC_LIMIT_CODE)
+    DESC_DATA_HIGH_4 equ 0x00 + (0x00 << 24) + DESC_S_DATA + DESC_TYPE_DATA + \
+                          DESC_P_1 + DESC_DPL_0 + DESC_G_4K + DESC_D_32 + DESC_L_32 + \
+                          DESC_LIMIT_DATA
+    DESC_VIDEO_HIGH_4 equ 0x00 + (0x00 << 24) + DESC_S_DATA + DESC_TYPE_DATA + \
+                          DESC_P_1 + DESC_DPL_0 + DESC_G_4K + DESC_D_32 + DESC_L_32 + \
+                          DESC_LIMIT_VIDEO
+    ; 选择子(16 bit) 属性 
+    RPL0   equ 000000_0000000000b
+    RPL1   equ 000000_0000000001b
+    RPL2   equ 000000_0000000010b
+    RPL3   equ 000000_0000000011b
+    TI_GDT equ 000000_0000000000b
+    TI_LDT equ 000000_0000000100b
+
