@@ -106,3 +106,4 @@ print_string:
     mov byte [gs:163], 0xA4
     mov byte [gs:164], 'P'
     mov byte [gs:165], 0xA4
+    ret 
