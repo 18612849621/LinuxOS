@@ -56,3 +56,7 @@ in 和 out 的数据流动都是右->左 比如 in / out A, B 都是B流向A
 | `dw` | Define Word        | 定义字，通常为 16 位   |
 | `dd` | Define Double Word | 定义双字，通常为 32 位 |
 | `dq` | Define quadword    | 定义四字，通常为 64 位 |
+
+# bochs
+
+https://www.cnblogs.com/wanghuizhao/p/16413232.html

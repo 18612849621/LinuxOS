@@ -23,7 +23,7 @@ jmp loader_start
     ; ------------------一些宏定义------------------
     ; GDT 表大小 = 当前地址($) - GDT 表的起始地址
     GDT_SIZE       equ $ - GDT_BASE
-    ; GDT 表总共大小为 32 字节
+    ; GDT 表总共大小为 32 字节, 这里 -1 是因为索引为 1
     GDT_LIMIT      equ GDT_SIZE - 1
     ; 预留 60 个描述符的空间
     ; times 60       dq  0x0
@@ -43,6 +43,7 @@ loader_start:
     ; INT 0x10
     ; 功能号：0x13
     ; 功能描述：打印字符串
+    ; wiki: https://blog.csdn.net/judyge/article/details/52289231
     ;---------------------------------
     ; 输入
     ; AH = 0x13
@@ -63,8 +64,10 @@ loader_start:
     mov  ax,   0x1301
     ; 页号为 (BH = 0) | 蓝底粉红字 (BL = 1fh)
     mov  bx,   0x001f
+    ; 由于在文本模式下的行数是25(0x18) 第 25 行 第 0 列, 文本模式下一共就 25 行
     mov  dx,   0x1800
     int  0x10                          ;调用BIOS中断0x10
+    call print_string
     ; ------------------准备进入保护模式------------------------
     ; 1. 打开A20 Gate 将端口 0x92 的第 1 位置 1
     in   al,   0x92
@@ -83,12 +86,23 @@ loader_start:
 ; ------------------loader start--------------------
 [bits 32]
 p_mode_start:
-    mov ax,            SELECTOR_DATA
-    mov ds,            ax
-    mov es,            ax
-    mov ss,            ax
-    mov esp,           LOADER_STACK_TOP_ADDR
-    mov ax,            SELECTOR_VIDEO
+    mov ax,  SELECTOR_DATA
+    mov ds,  ax
+    mov es,  ax
+    mov ss,  ax
+    mov esp, LOADER_STACK_TOP_ADDR
+    mov ax,  SELECTOR_VIDEO
+    mov gs,  ax
+    jmp $
+
+[bits 16]
+; ------------------loader start--------------------
+print_string:
+    mov ax,            0xb800
     mov gs,            ax
     mov byte [gs:160], 'P'
-    jmp $
+    mov byte [gs:161], 0xA4
+    mov byte [gs:162], 'P'
+    mov byte [gs:163], 0xA4
+    mov byte [gs:164], 'P'
+    mov byte [gs:165], 0xA4
