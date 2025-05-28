@@ -18,23 +18,23 @@ jmp loader_start
     ; (0xbffff - 0xb8000) = 0x7fff = 32767
     ; limit = 32767 / 4096[4K] ~= 7.99 所以段限制最高索引为7
     VIDEO_DESC:
-        dd 0xb8000007
+        dd 0x80000007
         dd DESC_VIDEO_HIGH_4
     ; ------------------一些宏定义------------------
     ; GDT 表大小 = 当前地址($) - GDT 表的起始地址
-    GDT_SIZE       equ $ - GDT_BASE
+    GDT_SIZE  equ $ - GDT_BASE
     ; GDT 表总共大小为 32 字节, 这里 -1 是因为索引为 1
-    GDT_LIMIT      equ GDT_SIZE - 1
+    GDT_LIMIT equ GDT_SIZE - 1
     ; 预留 60 个描述符的空间
     ; times 60       dq  0x0
     ; GDT 表的结束地址
+    gdt_ptr:
+        dw GDT_LIMIT
+        dd GDT_BASE
     ; 选择子 (16 bit) 定义 左移 3 位就是选择子的索引
     SELECTOR_CODE  equ (0x0001 << 3) + TI_GDT + RPL0
     SELECTOR_DATA  equ (0x0002 << 3) + TI_GDT + RPL0
     SELECTOR_VIDEO equ (0x0003 << 3) + TI_GDT + RPL0
-    gdt_ptr:
-        dw GDT_LIMIT
-        dd GDT_BASE
     LODER_CONTENT:
         db '2 loader design by pan'
 ; ------------------loader start--------------------
@@ -67,13 +67,12 @@ loader_start:
     ; 由于在文本模式下的行数是25(0x18) 第 25 行 第 0 列, 文本模式下一共就 25 行
     mov  dx,   0x1800
     int  0x10                          ;调用BIOS中断0x10
-    call print_string
     ; ------------------准备进入保护模式------------------------
     ; 1. 打开A20 Gate 将端口 0x92 的第 1 位置 1
     in   al,   0x92
     or   al,   0000_0010b
     out  0x92, al
-    ; 2.保护模式的开关，CRO 寄存器的 PE 位置 0
+    ; 2. 保护模式的开关，CRO 寄存器的 PE 位置 0
     mov  eax,  cr0
     or   eax,  0x00000001
     mov  cr0,  eax
@@ -86,19 +85,12 @@ loader_start:
 ; ------------------loader start--------------------
 [bits 32]
 p_mode_start:
-    mov ax,  SELECTOR_DATA
-    mov ds,  ax
-    mov es,  ax
-    mov ss,  ax
-    mov esp, LOADER_STACK_TOP_ADDR
-    mov ax,  SELECTOR_VIDEO
-    mov gs,  ax
-    jmp $
-
-[bits 16]
-; ------------------loader start--------------------
-print_string:
-    mov ax,            0xb800
+    mov ax,            SELECTOR_DATA
+    mov ds,            ax
+    mov es,            ax
+    mov ss,            ax
+    mov esp,           LOADER_STACK_TOP_ADDR
+    mov ax,            SELECTOR_VIDEO
     mov gs,            ax
     mov byte [gs:160], 'P'
     mov byte [gs:161], 0xA4
@@ -106,4 +98,4 @@ print_string:
     mov byte [gs:163], 0xA4
     mov byte [gs:164], 'P'
     mov byte [gs:165], 0xA4
-    ret 
+    jmp $

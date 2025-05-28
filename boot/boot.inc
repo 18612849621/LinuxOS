@@ -40,13 +40,13 @@ LOADER_READ_SECTOR_NUM           equ 4
     ; -------------------段地址-----------------
     ; _x x代表的是字节的个数 
     ; _HIGH / _LOW 代表的是高地址 / 低地址
-    DESC_CODE_HIGH_4 equ (0x00 + (0x00 << 24) + DESC_S_CODE + DESC_TYPE_CODE + \
+    DESC_CODE_HIGH_4 equ 0x00 + (0x00 << 24) + DESC_S_CODE + DESC_TYPE_CODE + \
                           DESC_P_1 + DESC_DPL_0 + DESC_G_4K + DESC_D_32 + DESC_L_32 + \
-                          DESC_LIMIT_CODE)
+                          DESC_LIMIT_CODE
     DESC_DATA_HIGH_4 equ 0x00 + (0x00 << 24) + DESC_S_DATA + DESC_TYPE_DATA + \
                           DESC_P_1 + DESC_DPL_0 + DESC_G_4K + DESC_D_32 + DESC_L_32 + \
                           DESC_LIMIT_DATA
-    DESC_VIDEO_HIGH_4 equ 0x00 + (0x00 << 24) + DESC_S_DATA + DESC_TYPE_DATA + \
+    DESC_VIDEO_HIGH_4 equ 0x0b + (0x00 << 24) + DESC_S_DATA + DESC_TYPE_DATA + \
                           DESC_P_1 + DESC_DPL_0 + DESC_G_4K + DESC_D_32 + DESC_L_32 + \
                           DESC_LIMIT_VIDEO
     ; 选择子(16 bit) 属性 
@@ -56,4 +56,3 @@ LOADER_READ_SECTOR_NUM           equ 4
     RPL3   equ 000000_0000000011b
     TI_GDT equ 000000_0000000000b
     TI_LDT equ 000000_0000000100b
-
