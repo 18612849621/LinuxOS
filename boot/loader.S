@@ -26,7 +26,7 @@ jmp loader_start
     ; GDT 表总共大小为 32 字节, 这里 -1 是因为索引为 1
     GDT_LIMIT equ GDT_SIZE - 1
     ; 预留 60 个描述符的空间
-    ; times 60       dq  0x0
+    times 60       dq  0x0
     ; GDT 表的结束地址
     gdt_ptr:
         dw GDT_LIMIT

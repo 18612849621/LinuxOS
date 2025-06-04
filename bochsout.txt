@@ -24,42 +24,42 @@
 00000000000i[USBCTL] Pluggable USB devices
 00000000000i[USBCTL]   disk cdrom mouse tablet keypad keyboard hub floppy
 00000000000i[USBCTL]   printer
-00000000000i[MEM0  ] allocated memory at 0x11c800000. after alignment, vector=0x11c800000, block_size = 128K
+00000000000i[MEM0  ] allocated memory at 0x130000000. after alignment, vector=0x130000000, block_size = 128K
 00000000000i[MEM0  ] 32.00MB
 00000000000i[MEM0  ] mem block size = 0x00020000, blocks=256
 00000000000i[MEM0  ] rom at 0xfffe0000/131072 ('/opt/homebrew/Cellar/bochs/3.0/share/bochs/BIOS-bochs-latest')
 00000000000i[CPU0  ] WARNING: RDRAND would not produce true random numbers !
 00000000000i[CPU0  ] initialized CPU model corei7_haswell_4770
 00000000000i[DEV   ] will paste characters every 100 iodev timer ticks
-00000000000i[      ] lt_dlhandle is 0x6000027b84e0
+00000000000i[      ] lt_dlhandle is 0x600003d4df20
 00000000000i[PLUGIN] loaded plugin libbx_pci.so
-00000000000i[      ] lt_dlhandle is 0x6000027a1a40
+00000000000i[      ] lt_dlhandle is 0x600003d4dec0
 00000000000i[PLUGIN] loaded plugin libbx_pci2isa.so
-00000000000i[      ] lt_dlhandle is 0x6000027a1b00
+00000000000i[      ] lt_dlhandle is 0x600003d4de00
 00000000000i[PLUGIN] loaded plugin libbx_usb_uhci.so
-00000000000i[      ] lt_dlhandle is 0x6000027a1bc0
+00000000000i[      ] lt_dlhandle is 0x600003d4c600
 00000000000i[PLUGIN] loaded plugin libbx_acpi.so
-00000000000i[      ] lt_dlhandle is 0x6000027a1c80
+00000000000i[      ] lt_dlhandle is 0x600003d4e040
 00000000000i[PLUGIN] loaded plugin libbx_hpet.so
-00000000000i[      ] lt_dlhandle is 0x6000027a1d40
+00000000000i[      ] lt_dlhandle is 0x600003d4e100
 00000000000i[PLUGIN] loaded plugin libbx_cmos.so
-00000000000i[      ] lt_dlhandle is 0x6000027a1260
+00000000000i[      ] lt_dlhandle is 0x600003d4e1c0
 00000000000i[PLUGIN] loaded plugin libbx_dma.so
-00000000000i[      ] lt_dlhandle is 0x6000027a11a0
+00000000000i[      ] lt_dlhandle is 0x600003d4e280
 00000000000i[PLUGIN] loaded plugin libbx_pic.so
-00000000000i[      ] lt_dlhandle is 0x6000027a1da0
+00000000000i[      ] lt_dlhandle is 0x600003d4e3a0
 00000000000i[PLUGIN] loaded plugin libbx_pit.so
-00000000000i[      ] lt_dlhandle is 0x6000027a1e60
+00000000000i[      ] lt_dlhandle is 0x600003d4e460
 00000000000i[PLUGIN] loaded plugin libbx_vga.so
-00000000000i[      ] lt_dlhandle is 0x6000027a1f20
+00000000000i[      ] lt_dlhandle is 0x600003d4e520
 00000000000i[PLUGIN] loaded plugin libbx_floppy.so
-00000000000i[      ] lt_dlhandle is 0x6000027a1fe0
+00000000000i[      ] lt_dlhandle is 0x600003d4e5e0
 00000000000i[PLUGIN] loaded plugin libbx_ioapic.so
-00000000000i[      ] lt_dlhandle is 0x6000027a20a0
+00000000000i[      ] lt_dlhandle is 0x600003d4e6a0
 00000000000i[PLUGIN] loaded plugin libbx_keyboard.so
-00000000000i[      ] lt_dlhandle is 0x6000027a2160
+00000000000i[      ] lt_dlhandle is 0x600003d4e760
 00000000000i[PLUGIN] loaded plugin libbx_harddrv.so
-00000000000i[      ] lt_dlhandle is 0x6000027a2220
+00000000000i[      ] lt_dlhandle is 0x600003d4e820
 00000000000i[PLUGIN] loaded plugin libbx_pci_ide.so
 00000000000i[PLUGIN] init_dev of 'pci' plugin device by virtual method
 00000000000i[DEV   ] i440FX PMC present at device 0, function 0
@@ -67,7 +67,7 @@
 00000000000i[DEV   ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[PLUGIN] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS  ] Using local time for initial clock
-00000000000i[CMOS  ] Setting initial clock to: Wed May 28 20:15:38   2025 tz=utc (time0=1748463338)
+00000000000i[CMOS  ] Setting initial clock to: Wed Jun  4 20:35:36   2025 tz=utc (time0=1749069336)
 00000000000i[PLUGIN] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA   ] channel 4 used by cascade
 00000000000i[PLUGIN] init_dev of 'pic' plugin device by virtual method
@@ -411,193 +411,26 @@
 00017358617i[PLUGIN] reset of 'iodebug' plugin device by virtual method
 00017358617i[PLUGIN] reset of 'extfpuirq' plugin device by virtual method
 00017358617i[PLUGIN] reset of 'usb_uhci' plugin device by virtual method
-00017360358i[BIOS  ] BIOS BUILD DATE: 02/16/25
-00017673068i[KBD   ] reset-disable command received
-00017675014i[BIOS  ] Starting rombios32
-00017675452i[BIOS  ] Shutdown flag 0
-00017676050i[BIOS  ] ram_size=0x02000000
-00017676482i[BIOS  ] ram_end=32MB
-00017717251i[BIOS  ] Found 1 cpu(s)
-00017731209i[BIOS  ] bios_table_addr: 0x000fa168 end=0x000fcc00
-00018059025i[PCI   ] i440FX PMC write to PAM register 59 (TLB Flush)
-00018386960i[P2ISA ] PCI IRQ routing: PIRQA# set to 0x0b
-00018386984i[P2ISA ] PCI IRQ routing: PIRQB# set to 0x09
-00018387008i[P2ISA ] PCI IRQ routing: PIRQC# set to 0x0b
-00018387032i[P2ISA ] PCI IRQ routing: PIRQD# set to 0x09
-00018387042i[P2ISA ] write: ELCR2 = 0x0a
-00018387811i[BIOS  ] PIIX3/PIIX4 init: elcr=00 0a
-00018401487i[BIOS  ] PCI: bus=0 devfn=0x00: vendor_id=0x8086 device_id=0x1237 class=0x0600
-00018403831i[BIOS  ] PCI: bus=0 devfn=0x08: vendor_id=0x8086 device_id=0x7000 class=0x0601
-00018406014i[BIOS  ] PCI: bus=0 devfn=0x09: vendor_id=0x8086 device_id=0x7010 class=0x0101
-00018406865i[BIOS  ] region 4: 0x0000c000
-00018408900i[BIOS  ] PCI: bus=0 devfn=0x0a: vendor_id=0x8086 device_id=0x7020 class=0x0c03
-00018409729i[BIOS  ] region 4: 0x0000c020
-00018409857i[UHCI  ] new IRQ line = 9
-00018411779i[BIOS  ] PCI: bus=0 devfn=0x0b: vendor_id=0x8086 device_id=0x7113 class=0x0680
-00018412055i[ACPI  ] new IRQ line = 11
-00018412069i[ACPI  ] new IRQ line = 9
-00018412139i[PCI   ] setting SMRAM control register to 0x4a
-00018576274i[CPU0  ] Enter to System Management Mode
-00018576274i[CPU0  ] enter_system_management_mode: temporary disable VMX while in SMM mode
-00018576284i[CPU0  ] RSM: Resuming from System Management Mode
-00018740340i[PCI   ] setting SMRAM control register to 0x0a
-00018767003i[BIOS  ] MP table addr=0x000fa240 MPC table addr=0x000fa170 size=0xc8
-00018768710i[BIOS  ] SMBIOS table addr=0x000fa250
-00018770799i[BIOS  ] ACPI tables: RSDP addr=0x000fa370 ACPI DATA addr=0x01ff0000 size=0xff8
-00018773784i[BIOS  ] Firmware waking vector 0x1ff00cc
-00018776038i[PCI   ] i440FX PMC write to PAM register 59 (TLB Flush)
-00018776768i[BIOS  ] bios_table_cur_addr: 0x000fa394
-00018876721i[VBIOS ] VGABios ID: vgabios.c 2025-01-08
-00018876800i[BXVGA ] VBE known Display Interface b0c0
-00018876840i[BXVGA ] VBE known Display Interface b0c5
-00018878261i[VBIOS ] VBE Bios ID: vbe.c 2025-01-08
-00019044357i[BIOS  ] ata0-0: PCHS=120/16/63 translation=none LCHS=120/16/63
-00022604148i[BIOS  ] IDE time out
-00034513003i[BIOS  ] Booting from 0000:7c00
-00034717235e[CPU0  ] interrupt(): gate descriptor is not valid sys seg (vector=0x08)
-00034717235e[CPU0  ] interrupt(): gate descriptor is not valid sys seg (vector=0x0d)
-00034717235e[CPU0  ] interrupt(): gate descriptor is not valid sys seg (vector=0x08)
-00034717235i[CPU0  ] CPU is in protected mode (active)
-00034717235i[CPU0  ] CS.mode = 32 bit
-00034717235i[CPU0  ] SS.mode = 32 bit
-00034717235i[CPU0  ] EFER = 0x00000000: ffxsr nxe lma lme sce
-00034717235i[CPU0  ] XCR0=0x00000001: tiledata tilecfg hwp lbr uintr hdc cet_s cet_u pasid pkru pt hi_zmm zmm_hi256 opmask bndcfg bndregs ymm sse FPU
-00034717235i[CPU0  ] | EAX=60000018  EBX=0000001f  ECX=00090016  EDX=00001800
-00034717235i[CPU0  ] | ESP=00000900  EBP=00000928  ESI=00000002  EDI=0000ffac
-00034717235i[CPU0  ] | EFLAGS=00010206: id vip vif ac vm RF nt IOPL=0 of df IF tf sf zf af PF cf
-00034717235i[CPU0  ] | SEG sltr(index|ti|rpl)     base    limit G D
-00034717235i[CPU0  ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
-00034717235i[CPU0  ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00034717235i[CPU0  ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00034717235i[CPU0  ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00034717235i[CPU0  ] |  FS:0000( 0005| 0|  0) 00000000 0000ffff 0 0
-00034717235i[CPU0  ] |  GS:0018( 0003| 0|  0) 000b8000 00007fff 1 1
-00034717235i[CPU0  ] | EIP=000009b4 (000009b4)
-00034717235i[CPU0  ] | CR0=0x60000011: pg CD NW ac wp ne ET ts em mp PE
-00034717235i[CPU0  ] | CR2=0x00000000
-00034717235i[CPU0  ] | CR3=0x00000000
-00034717235i[CPU0  ] | CR4=0x00000000: lass uintr pks cet pke smap smep keylock osxsave pcid fsgsbase smx vmx la57 umip osxmmexcpt osfxsr pce pge mce pae pse de tsd pvi vme
-00034717235e[CPU0  ] exception(): 3rd (13) exception with no resolution, shutdown status is 00h, resetting
-00034717235i[SYS   ] bx_pc_system_c::Reset(HARDWARE) called
-00034717235i[CPU0  ] cpu hardware reset
-00034717235i[APIC0 ] allocate APIC id=0 (MMIO enabled) to 0x0000fee00000
-00034717235i[CPU0  ] CPUID[0x00000000]: 0000000d 756e6547 6c65746e 49656e69
-00034717235i[CPU0  ] CPUID[0x00000001]: 000306c3 00010800 77faf3bf afebfbff
-00034717235i[CPU0  ] CPUID[0x00000002]: 76036301 00f0b5ff 00000000 00c10000
-00034717235i[CPU0  ] CPUID[0x00000003]: 00000000 00000000 00000000 00000000
-00034717235i[CPU0  ] CPUID[0x00000004]: 1c004121 01c0003f 0000003f 00000000
-00034717235i[CPU0  ] CPUID[0x00000005]: 00000040 00000040 00000003 00042120
-00034717235i[CPU0  ] CPUID[0x00000006]: 00000077 00000002 00000009 00000000
-00034717235i[CPU0  ] CPUID[0x00000007]: 00000000 000027ab 00000000 00000000
-00034717235i[CPU0  ] CPUID[0x00000008]: 00000000 00000000 00000000 00000000
-00034717235i[CPU0  ] CPUID[0x00000009]: 00000000 00000000 00000000 00000000
-00034717235i[CPU0  ] WARNING: Architectural Performance Monitoring is not implemented
-00034717235i[CPU0  ] CPUID[0x0000000a]: 07300403 00000000 00000000 00000603
-00034717235i[CPU0  ] CPUID[0x0000000b]: 00000000 00000000 00000000 00000000
-00034717235i[CPU0  ] CPUID[0x0000000c]: 00000000 00000000 00000000 00000000
-00034717235i[CPU0  ] CPUID[0x0000000d]: 00000007 00000240 00000340 00000000
-00034717235i[CPU0  ] CPUID[0x80000000]: 80000008 00000000 00000000 00000000
-00034717235i[CPU0  ] CPUID[0x80000001]: 00000000 00000000 00000121 2c100000
-00034717235i[CPU0  ] CPUID[0x80000002]: 65746e49 2952286c 726f4320 4d542865
-00034717235i[CPU0  ] CPUID[0x80000003]: 37692029 3737342d 50432030 20402055
-00034717235i[CPU0  ] CPUID[0x80000004]: 30342e33 007a4847 00000000 00000000
-00034717235i[CPU0  ] CPUID[0x80000005]: 00000000 00000000 00000000 00000000
-00034717235i[CPU0  ] CPUID[0x80000006]: 00000000 00000000 01006040 00000000
-00034717235i[CPU0  ] CPUID[0x80000007]: 00000000 00000000 00000000 00000100
-00034717235i[CPU0  ] CPUID[0x80000008]: 00003028 00000200 00000000 00000000
-00034717235i[CPU0  ] CPU Features supported:
-00034717235i[CPU0  ] 		x87
-00034717235i[CPU0  ] 		486ni
-00034717235i[CPU0  ] 		pentium_ni
-00034717235i[CPU0  ] 		p6ni
-00034717235i[CPU0  ] 		mmx
-00034717235i[CPU0  ] 		debugext
-00034717235i[CPU0  ] 		vme
-00034717235i[CPU0  ] 		pse
-00034717235i[CPU0  ] 		pae
-00034717235i[CPU0  ] 		pge
-00034717235i[CPU0  ] 		mtrr
-00034717235i[CPU0  ] 		pat
-00034717235i[CPU0  ] 		sysenter_sysexit
-00034717235i[CPU0  ] 		clflush
-00034717235i[CPU0  ] 		sse
-00034717235i[CPU0  ] 		sse2
-00034717235i[CPU0  ] 		sse3
-00034717235i[CPU0  ] 		ssse3
-00034717235i[CPU0  ] 		sse4_1
-00034717235i[CPU0  ] 		sse4_2
-00034717235i[CPU0  ] 		popcnt
-00034717235i[CPU0  ] 		mwait
-00034717235i[CPU0  ] 		longmode
-00034717235i[CPU0  ] 		lm_lahf_sahf
-00034717235i[CPU0  ] 		nx
-00034717235i[CPU0  ] 		1g_pages
-00034717235i[CPU0  ] 		cmpxhg16b
-00034717235i[CPU0  ] 		rdtscp
-00034717235i[CPU0  ] 		xsave
-00034717235i[CPU0  ] 		xsaveopt
-00034717235i[CPU0  ] 		aes_pclmulqdq
-00034717235i[CPU0  ] 		movbe
-00034717235i[CPU0  ] 		fsgsbase
-00034717235i[CPU0  ] 		avx
-00034717235i[CPU0  ] 		avx2
-00034717235i[CPU0  ] 		avx_f16c
-00034717235i[CPU0  ] 		avx_fma
-00034717235i[CPU0  ] 		lzcnt
-00034717235i[CPU0  ] 		bmi1
-00034717235i[CPU0  ] 		bmi2
-00034717235i[CPU0  ] 		vmx
-00034717235i[CPU0  ] 		rdrand
-00034717235i[CPU0  ] 		smep
-00034717235i[CPU0  ] 		xapic
-00034717235i[CPU0  ] 		x2apic
-00034717235i[CPU0  ] 		pcid
-00034717235i[CPU0  ] 		invpcid
-00034717235i[CPU0  ] 		tsc_adjust
-00034717235i[CPU0  ] 		tsc_deadline
-00034717235i[CPU0  ] 		fcs_fds_deprecation
-00034717235i[PLUGIN] reset of 'pci' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'pci2isa' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'cmos' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'dma' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'pic' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'pit' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'vga' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'floppy' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'acpi' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'hpet' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'ioapic' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'keyboard' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'harddrv' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'pci_ide' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'serial' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'speaker' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'unmapped' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'parallel' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'biosdev' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'iodebug' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'extfpuirq' plugin device by virtual method
-00034717235i[PLUGIN] reset of 'usb_uhci' plugin device by virtual method
-00034717236i[      ] dbg: Quit
-00034717236i[CPU0  ] CPU is in real mode (active)
-00034717236i[CPU0  ] CS.mode = 16 bit
-00034717236i[CPU0  ] SS.mode = 16 bit
-00034717236i[CPU0  ] EFER = 0x00000000: ffxsr nxe lma lme sce
-00034717236i[CPU0  ] XCR0=0x00000001: tiledata tilecfg hwp lbr uintr hdc cet_s cet_u pasid pkru pt hi_zmm zmm_hi256 opmask bndcfg bndregs ymm sse FPU
-00034717236i[CPU0  ] | EAX=00000000  EBX=00000000  ECX=00000000  EDX=00000000
-00034717236i[CPU0  ] | ESP=00000000  EBP=00000000  ESI=00000000  EDI=00000000
-00034717236i[CPU0  ] | EFLAGS=00000002: id vip vif ac vm rf nt IOPL=0 of df if tf sf zf af pf cf
-00034717236i[CPU0  ] | SEG sltr(index|ti|rpl)     base    limit G D
-00034717236i[CPU0  ] |  CS:f000( 1e00| 0|  0) ffff0000 0000ffff 0 0
-00034717236i[CPU0  ] |  DS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
-00034717236i[CPU0  ] |  SS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
-00034717236i[CPU0  ] |  ES:0000( 0000| 0|  0) 00000000 0000ffff 0 0
-00034717236i[CPU0  ] |  FS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
-00034717236i[CPU0  ] |  GS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
-00034717236i[CPU0  ] | EIP=0000fff0 (0000fff0)
-00034717236i[CPU0  ] | CR0=0x60000010: pg CD NW ac wp ne ET ts em mp pe
-00034717236i[CPU0  ] | CR2=0x00000000
-00034717236i[CPU0  ] | CR3=0x00000000
-00034717236i[CPU0  ] | CR4=0x00000000: lass uintr pks cet pke smap smep keylock osxsave pcid fsgsbase smx vmx la57 umip osxmmexcpt osfxsr pce pge mce pae pse de tsd pvi vme
-00034717236i[CMOS  ] Last time: 1748463346 tz=utc (Wed May 28 20:15:46   2025)
-00034717236i[SIM   ] quit_sim called with exit code 0
+00017358618i[      ] dbg: Quit
+00017358618i[CPU0  ] CPU is in real mode (active)
+00017358618i[CPU0  ] CS.mode = 16 bit
+00017358618i[CPU0  ] SS.mode = 16 bit
+00017358618i[CPU0  ] EFER = 0x00000000: ffxsr nxe lma lme sce
+00017358618i[CPU0  ] XCR0=0x00000001: tiledata tilecfg hwp lbr uintr hdc cet_s cet_u pasid pkru pt hi_zmm zmm_hi256 opmask bndcfg bndregs ymm sse FPU
+00017358618i[CPU0  ] | EAX=00000000  EBX=00000000  ECX=00000000  EDX=00000000
+00017358618i[CPU0  ] | ESP=00000000  EBP=00000000  ESI=00000000  EDI=00000000
+00017358618i[CPU0  ] | EFLAGS=00000002: id vip vif ac vm rf nt IOPL=0 of df if tf sf zf af pf cf
+00017358618i[CPU0  ] | SEG sltr(index|ti|rpl)     base    limit G D
+00017358618i[CPU0  ] |  CS:f000( 1e00| 0|  0) ffff0000 0000ffff 0 0
+00017358618i[CPU0  ] |  DS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+00017358618i[CPU0  ] |  SS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+00017358618i[CPU0  ] |  ES:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+00017358618i[CPU0  ] |  FS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+00017358618i[CPU0  ] |  GS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+00017358618i[CPU0  ] | EIP=0000fff0 (0000fff0)
+00017358618i[CPU0  ] | CR0=0x60000010: pg CD NW ac wp ne ET ts em mp pe
+00017358618i[CPU0  ] | CR2=0x00000000
+00017358618i[CPU0  ] | CR3=0x00000000
+00017358618i[CPU0  ] | CR4=0x00000000: lass uintr pks cet pke smap smep keylock osxsave pcid fsgsbase smx vmx la57 umip osxmmexcpt osfxsr pce pge mce pae pse de tsd pvi vme
+00017358618i[CMOS  ] Last time: 1749069340 tz=utc (Wed Jun  4 20:35:40   2025)
+00017358618i[SIM   ] quit_sim called with exit code 0
