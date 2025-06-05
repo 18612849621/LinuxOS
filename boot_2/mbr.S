@@ -1,5 +1,5 @@
 ;主引导程序
-%include "boot/boot.inc"
+%include "boot_2/boot.inc"
 ;---------------------------------
 SECTION MBR vstart=0x7c00
     mov ax, cs
@@ -51,7 +51,7 @@ SECTION MBR vstart=0x7c00
     mov  cx,  LOADER_READ_SECTOR_NUM
     call rd_disk_m_16
     ; 程序加载好了 准备执行
-    jmp  LOADER_BASE_ADDR_IN_MEM
+    jmp  LOADER_BASE_ADDR_IN_MEM + 0x300
 ; -------------------------------------
 ;   读取磁盘的第n个扇区
 ;   eax = LBA扇区号
@@ -121,7 +121,6 @@ rd_disk_m_16:
 ; func end
     ret
    
-    jmp $
     times 510-($-$$) db 0
     db                  0x55, 0xaa
 
