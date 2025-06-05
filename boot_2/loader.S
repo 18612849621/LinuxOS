@@ -55,8 +55,27 @@ loader_start:
     cmp ebx, 0
     ; jnz ZF为 0 (cmp 比较结果不相等) 则跳转
     jnz .e820_get_mem_loop
-
-
+    ; 找到所有ards中最高位的内存地址
+    ; 循环 ards_num 次
+    mov cx,  [ards_num]
+    ; 初始化 ards 第一个位置
+    mov ebx, ards_buffer
+    ; 用 edx 记录最大值
+    xor edx, edx
+    ; 循环遍历所有 ARDS 结构体
+    ; base_add_low + length_low [低 32 位] 因为操作系统是 32 bit
+.find_max_mem_loop:
+    mov eax, [ebx]
+    add eax, [ebx + 8]
+    cmp edx, eax
+    ; jge 操作数1 >= 操作数2 不更新最大值
+    jge .scan_next_ards
+    mov edx, eax
+.scan_next_ards:
+    ; ards 的结构体占用 20 Bytes
+    add  ebx, 20
+    loop .find_max_mem_loop
+    jmp  .mark_max_mem_addr
 ; int 0x15 ax=E801h 获取内存大小最大支持 4G 返回后
 ; ax 和 cx 值一样以 1 KB 为单位 
 ; bx 和 dx 值一样以 64 KB 为单位
@@ -73,5 +92,10 @@ loader_start:
     jc  .complete_failed
 
 .complete_failed:
+    jmp $
+
+.mark_max_mem_addr:
+    ; 存储最大值 到 0xb00 用 xp /g 0xb00
+    mov [total_mem_bytes], edx
     jmp $
 
