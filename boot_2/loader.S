@@ -29,17 +29,49 @@ LOADER_STACK_TOP_ADDR equ LOADER_BASE_ADDR_IN_MEM
         dd GDT_BASE
     ; total_mem_bytes_4 + gdt_ptr_6 + ards_buffer_244 
     ards_buffer times 244 db 0
-    placeholder_padding dw  0
+    ; 用于记录 ARDS 结构体数量 xp /h 0xbfe
+    ards_num       dw  0
     ; 选择子 (16 bit) 定义 左移 3 位就是选择子的索引
-    SELECTOR_CODE       equ (0x0001 << 3) + TI_GDT + RPL0
-    SELECTOR_DATA       equ (0x0002 << 3) + TI_GDT + RPL0
-    SELECTOR_VIDEO      equ (0x0003 << 3) + TI_GDT + RPL0
+    SELECTOR_CODE  equ (0x0001 << 3) + TI_GDT + RPL0
+    SELECTOR_DATA  equ (0x0002 << 3) + TI_GDT + RPL0
+    SELECTOR_VIDEO equ (0x0003 << 3) + TI_GDT + RPL0
 ; addr 0xc00 上面的 placeholder 为了对齐 让 mbr 可以直接跳转到此地址
 loader_start:
     ;int 0x15 eax= 0x0000E820, edx=0x534d4150 ("SMAP') 获取内存布局
     xor ebx, ebx
     mov edx, 0x534d4150
     mov di,  ards_buffer
+; 循环获取每个ARDS内存范围描述结构
 .e820_get_mem_loop:
     mov ecx, 20
+    ; 每轮执行后会刷新 eax 寄存器的值 所以需要重新赋值
     mov eax, 0x0000E820
+    int 0x15
+    ; jc CF = 1 则跳转
+    jc  .e820_failed_so_try_e801
+    add di,  cx
+    inc word [ards_num]
+    ; ebx 为 0 说明遍历到末尾, cmp 的比较方法就是操作数1(ebx) - 操作数2 (0)
+    cmp ebx, 0
+    ; jnz ZF为 0 (cmp 比较结果不相等) 则跳转
+    jnz .e820_get_mem_loop
+
+
+; int 0x15 ax=E801h 获取内存大小最大支持 4G 返回后
+; ax 和 cx 值一样以 1 KB 为单位 
+; bx 和 dx 值一样以 64 KB 为单位
+; ax 和 cx 寄存器表示低 16 MB 其实是 0 - 15 MB 其中 1 MB 给 ISA 设备准备
+; bx 和 dx 寄存器中为 16 MB 到 4 GB
+.e820_failed_so_try_e801:
+    mov eax, 0xE801
+    int 0x15
+    jc  .e801_failed_so_try_e88
+
+.e801_failed_so_try_e88:
+    mov eax, 0xE88
+    int 0x15
+    jc  .complete_failed
+
+.complete_failed:
+    jmp $
+
