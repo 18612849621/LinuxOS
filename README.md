@@ -53,7 +53,7 @@ in 和 out 的数据流动都是右->左 比如 in / out A, B 都是B流向A
 | 指令 | 名称               | 描述                             |
 | ---- | ------------------ | -------------------------------- |
 | `db` | Define Byte        | 定义字节，通常为 8 位  1 Bytes   |
-| `dw` | Define Word        | 定义字，  通常为 16 位   2 Bytes |
+| `dw` | Define Word        | 定义字，  通常为 16 位 2 Bytes   |
 | `dd` | Define Double Word | 定义双字，通常为 32 位 4 Bytes   |
 | `dq` | Define quadword    | 定义四字，通常为 64 位 8 Bytes   |
 
