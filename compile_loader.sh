@@ -1,3 +1,13 @@
-set -x
-nasm -o boot/loader.bin boot/loader.S
-dd if=boot/loader.bin of=hd60.img bs=512 count=4 seek=2 conv=notrunc
+#!/bin/bash
+# 定义构建参数变量
+BOOT_FOLDER_VERSION="1"
+BOOT_FOLDER="boot_${BOOT_FOLDER_VERSION}"
+LOADER_BIN="boot_${BOOT_FOLDER_VERSION}/loader.bin"
+OUTPUT_IMG="hd60.img"
+BLOCK_SIZE=512
+SECTOR_COUNT=4
+SEEK_VALUE=2
+
+# 使用变量执行命令
+nasm -o $LOADER_BIN $BOOT_FOLDER/loader.S
+dd if=$LOADER_BIN of=$OUTPUT_IMG bs=$BLOCK_SIZE count=$SECTOR_COUNT seek=$SEEK_VALUE conv=notrunc
