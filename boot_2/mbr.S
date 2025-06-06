@@ -51,7 +51,7 @@ SECTION MBR vstart=0x7c00
     mov  cx,  LOADER_READ_SECTOR_NUM
     call rd_disk_m_16
     ; 程序加载好了 准备执行
-    jmp  LOADER_BASE_ADDR_IN_MEM + 0x300
+    jmp  LOADER_BASE_ADDR_IN_MEM
 ; -------------------------------------
 ;   读取磁盘的第n个扇区
 ;   eax = LBA扇区号
