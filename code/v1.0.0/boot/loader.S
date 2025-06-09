@@ -1,4 +1,4 @@
-%include "boot_1/boot.inc"
+%include "code/v1.0.0/boot/boot.inc"
 section loader vstart=LOADER_BASE_ADDR_IN_MEM
 LOADER_STACK_TOP_ADDR equ LOADER_BASE_ADDR_IN_MEM
 ; 函数执行需要恢复的地址为 LOADER_BASE_ADDR_IN_MEM 给 sp 寄存器赋值

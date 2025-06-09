@@ -1,4 +1,4 @@
-%include "boot_2/boot.inc"
+%include "code/v1.0.1/boot/boot.inc"
 section loader vstart=LOADER_BASE_ADDR_IN_MEM
 LOADER_STACK_TOP_ADDR equ LOADER_BASE_ADDR_IN_MEM
 ; --------------------GDT------------------------

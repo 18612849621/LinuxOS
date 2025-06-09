@@ -1,3 +1,12 @@
+# 版本日志
+- v1.0.0 
+  - mbr + loader 
+  - 保护模式开启打印字符
+- v1.0.1
+  - 物理内存容量检测
+- v1.0.2
+  - 保护模式 + 分页
+
 # 记录内核启动脚本
 工作路径为 /Users/panyuchen/Desktop/Projects/LinuxOS
 
