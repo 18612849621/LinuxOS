@@ -6,45 +6,44 @@
   - 物理内存容量检测
 - v1.0.2
   - 保护模式 + 分页
+- v1.0.3
+  - 内核加载
 
 # 记录内核启动脚本
-工作路径为 /Users/panyuchen/Desktop/Projects/LinuxOS
+hd60.img 磁盘使用(按照最新版本说明)
 
-## 1 complie 
-```shell
-# mbr
-nasm -o boot/mbr.bin boot/mbr.S 
-# loader
-nasm -o boot/loader.bin boot/loader.S 
-```
-## 2 load 数据到磁盘
-```shell
-# mbr
-dd if=boot/mbr.bin of=hd60.img bs=512 count=1 conv=notrunc
-# loader
-dd if=boot/loader.bin of=hd60.img bs=512 count=4 seek=2 conv=notrunc
-# loader 清理无用
-dd if=/dev/zero of=hd60.img bs=512 count=4 seek=2 conv=notrunc
+(512 Bytes per sector)
 
-# 查看数据是否load
-# mbr
-xxd -l 512 hd60.img
-# loader
-xxd -s 1024 -l 1024 hd60.img
-```
+loader 预留 2 KB 的空间
 
-## 3 boch 调试
+kernel 预留 100 KB 的空间 
+
+| 磁盘扇区索引 |  内容  |
+| :----------: | :----: |
+|      0       |  mbr   |
+|      1       |        |
+|      2       | loader |
+|      3       | loader |
+|      4       | loader |
+|      5       | loader |
+|      6       |        |
+|      7       |        |
+|      8       |        |
+|      9       | kernel |
+|     ...      |        |
+|     208      | kernel |
+## boch 调试
 
 ```shell
 # 需要配置好环境
 alias bochsd="bochs -debugger"
 ```
-### 3.1 start & prepare
+### 1.1 start & prepare
 ```shell
 bochsd -f bochsrc.conf
 ```
 
-### 3.2 常用命令
+### 1.2 常用命令
 
 ```shell
 q 退出
