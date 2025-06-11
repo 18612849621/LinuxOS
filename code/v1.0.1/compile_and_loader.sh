@@ -7,8 +7,8 @@ SEEK_VALUE=2
 
 # mbr load 到磁盘的第一个扇区
 nasm -o code/v1.0.1/boot/mbr.bin code/v1.0.1/boot/mbr.S
-dd if=code/v1.0.1/boot/mbr.bin of=$OUTPUT_IMG bs=$BLOCK_SIZE count=1 conv=notrunc
+dd if=code/v1.0.1/boot/mbr.bin of=resources/$OUTPUT_IMG bs=$BLOCK_SIZE count=1 conv=notrunc
 # loader load 到磁盘的第3个扇区
 nasm -o code/v1.0.1/boot/loader.bin code/v1.0.1/boot/loader.S
-dd if=code/v1.0.1/boot/loader.bin of=$OUTPUT_IMG bs=$BLOCK_SIZE count=$SECTOR_COUNT seek=$SEEK_VALUE conv=notrunc
+dd if=code/v1.0.1/boot/loader.bin of=resources/$OUTPUT_IMG bs=$BLOCK_SIZE count=$SECTOR_COUNT seek=$SEEK_VALUE conv=notrunc
 

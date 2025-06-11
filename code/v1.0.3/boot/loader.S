@@ -37,89 +37,89 @@ LOADER_STACK_TOP_ADDR equ LOADER_BASE_ADDR_IN_MEM
     SELECTOR_VIDEO equ (0x0003 << 3) + TI_GDT + RPL0
 ; addr 0xc00 上面的 ards_num 为了对齐 让 mbr 可以直接跳转到此地址
 loader_start:
-    ;int 0x15 eax= 0x0000E820, edx=0x534d4150 ("SMAP') 获取内存布局
-    xor ebx, ebx
-    mov edx, 0x534d4150
-    mov di,  ards_buffer
-; 循环获取每个ARDS内存范围描述结构
-.e820_get_mem_loop:
-    mov ecx, 20
-    ; 每轮执行后会刷新 eax 寄存器的值 所以需要重新赋值
-    mov eax, 0x0000E820
-    int 0x15
-    ; jc CF = 1 则跳转
-    jc  .e820_failed_so_try_e801
-    add di,  cx
-    inc word [ards_num]
-    ; ebx 为 0 说明遍历到末尾, cmp 的比较方法就是操作数1(ebx) - 操作数2 (0)
-    cmp ebx, 0
-    ; jnz ZF为 0 (cmp 比较结果不相等) 则跳转
-    jnz .e820_get_mem_loop
-    ; 找到所有ards中最高位的内存地址
-    ; 循环 ards_num 次
-    mov cx,  [ards_num]
-    ; 初始化 ards 第一个位置
-    mov ebx, ards_buffer
-    ; 用 edx 记录最大值
-    xor edx, edx
-    ; 循环遍历所有 ARDS 结构体
-    ; base_add_low + length_low [低 32 位] 因为操作系统是 32 bit
-.find_max_mem_loop:
-    mov eax, [ebx]
-    add eax, [ebx + 8]
-    cmp edx, eax
-    ; jge 操作数1 >= 操作数2 不更新最大值
-    jge .scan_next_ards
-    mov edx, eax
-.scan_next_ards:
-    ; ards 的结构体占用 20 Bytes
-    add  ebx, 20
-    loop .find_max_mem_loop
-    jmp  .mem_get_ok
-; int 0x15 ax=E801h 获取内存大小最大支持 4G 返回后
-; ax 和 cx 值一样以 1 KB 为单位 
-; bx 和 dx 值一样以 64 KB 为单位
-; ax 和 cx 寄存器表示低 16 MB 其实是 0 - 15 MB 其中 1 MB 给 ISA 设备准备
-; bx 和 dx 寄存器中为 16 MB 到 4 GB
-.e820_failed_so_try_e801:
-    mov eax, 0xE801
-    int 0x15
-    jc  .e801_failed_so_try_e88
-    ;1 先算出低15M的内存,ax和cx中是以KB为单位的内存数量,将其转换为以byte为单位
-    mov cx,  0x400              ;cx和ax值一样,cx用做乘数
-    mul cx
-    shl edx, 16
-    and eax, 0x0000FFFF
-    or  edx, eax
-    add edx, 0x100000           ;ax只是15MB,故要加1MB
-    mov esi, edx                ;先把低15MB的内存容量存入esi寄存器备份
+;     ;int 0x15 eax= 0x0000E820, edx=0x534d4150 ("SMAP') 获取内存布局
+;     xor ebx, ebx
+;     mov edx, 0x534d4150
+;     mov di,  ards_buffer
+; ; 循环获取每个ARDS内存范围描述结构
+; .e820_get_mem_loop:
+;     mov ecx, 20
+;     ; 每轮执行后会刷新 eax 寄存器的值 所以需要重新赋值
+;     mov eax, 0x0000E820
+;     int 0x15
+;     ; jc CF = 1 则跳转
+;     jc  .e820_failed_so_try_e801
+;     add di,  cx
+;     inc word [ards_num]
+;     ; ebx 为 0 说明遍历到末尾, cmp 的比较方法就是操作数1(ebx) - 操作数2 (0)
+;     cmp ebx, 0
+;     ; jnz ZF为 0 (cmp 比较结果不相等) 则跳转
+;     jnz .e820_get_mem_loop
+;     ; 找到所有ards中最高位的内存地址
+;     ; 循环 ards_num 次
+;     mov cx,  [ards_num]
+;     ; 初始化 ards 第一个位置
+;     mov ebx, ards_buffer
+;     ; 用 edx 记录最大值
+;     xor edx, edx
+;     ; 循环遍历所有 ARDS 结构体
+;     ; base_add_low + length_low [低 32 位] 因为操作系统是 32 bit
+; .find_max_mem_loop:
+;     mov eax, [ebx]
+;     add eax, [ebx + 8]
+;     cmp edx, eax
+;     ; jge 操作数1 >= 操作数2 不更新最大值
+;     jge .scan_next_ards
+;     mov edx, eax
+; .scan_next_ards:
+;     ; ards 的结构体占用 20 Bytes
+;     add  ebx, 20
+;     loop .find_max_mem_loop
+;     jmp  .mem_get_ok
+; ; int 0x15 ax=E801h 获取内存大小最大支持 4G 返回后
+; ; ax 和 cx 值一样以 1 KB 为单位 
+; ; bx 和 dx 值一样以 64 KB 为单位
+; ; ax 和 cx 寄存器表示低 16 MB 其实是 0 - 15 MB 其中 1 MB 给 ISA 设备准备
+; ; bx 和 dx 寄存器中为 16 MB 到 4 GB
+; .e820_failed_so_try_e801:
+;     mov eax, 0xE801
+;     int 0x15
+;     jc  .e801_failed_so_try_e88
+;     ;1 先算出低15M的内存,ax和cx中是以KB为单位的内存数量,将其转换为以byte为单位
+;     mov cx,  0x400              ;cx和ax值一样,cx用做乘数
+;     mul cx
+;     shl edx, 16
+;     and eax, 0x0000FFFF
+;     or  edx, eax
+;     add edx, 0x100000           ;ax只是15MB,故要加1MB
+;     mov esi, edx                ;先把低15MB的内存容量存入esi寄存器备份
 
-    ;2 再将16MB以上的内存转换为byte为单位,寄存器bx和dx中是以64KB为单位的内存数量
-    xor eax, eax
-    mov ax,  bx
-    mov ecx, 0x10000 ;0x10000十进制为64KB
-    mul ecx          ;32位乘法,默认的被乘数是eax,积为64位,高32位存入edx,低32位存入eax.
-    add esi, eax     ;由于此方法只能测出4G以内的内存,故32位eax足够了,edx肯定为0,只加eax便可
-    mov edx, esi     ;edx为总内存大小
-    jmp .mem_get_ok
+;     ;2 再将16MB以上的内存转换为byte为单位,寄存器bx和dx中是以64KB为单位的内存数量
+;     xor eax, eax
+;     mov ax,  bx
+;     mov ecx, 0x10000 ;0x10000十进制为64KB
+;     mul ecx          ;32位乘法,默认的被乘数是eax,积为64位,高32位存入edx,低32位存入eax.
+;     add esi, eax     ;由于此方法只能测出4G以内的内存,故32位eax足够了,edx肯定为0,只加eax便可
+;     mov edx, esi     ;edx为总内存大小
+;     jmp .mem_get_ok
 
-.e801_failed_so_try_e88:
-    mov eax, 0xE88
-    int 0x15
-    ;int 15后，ax存入的是以kb为单位的内存容量
-    jc  .error_hlt
-    and eax, 0x0000FFFF
+; .e801_failed_so_try_e88:
+;     mov eax, 0xE88
+;     int 0x15
+;     ;int 15后，ax存入的是以kb为单位的内存容量
+;     jc  .error_hlt
+;     and eax, 0x0000FFFF
         
-    ;16位乘法，被乘数是ax,积为32位.积的高16位在dx中，积的低16位在ax中
-    mov cx,  0x400    ;0x400等于1024,将ax中的内存容量换为以byte为单位
-    mul cx
-    shl edx, 16       ;把dx移到高16位
-    or  edx, eax      ;把积的低16位组合到edx,为32位的积
-    add edx, 0x100000 ;0x88子功能只会返回1MB以上的内存,故实际内存大小要加上1MB
+;     ;16位乘法，被乘数是ax,积为32位.积的高16位在dx中，积的低16位在ax中
+;     mov cx,  0x400    ;0x400等于1024,将ax中的内存容量换为以byte为单位
+;     mul cx
+;     shl edx, 16       ;把dx移到高16位
+;     or  edx, eax      ;把积的低16位组合到edx,为32位的积
+;     add edx, 0x100000 ;0x88子功能只会返回1MB以上的内存,故实际内存大小要加上1MB
 
-.mem_get_ok:
-    ; 存储最大值 到 0xb00 用 xp /w 0xb00
-    mov [total_mem_bytes], edx
+; .mem_get_ok:
+;     ; 存储最大值 到 0xb00 用 xp /w 0xb00
+;     mov [total_mem_bytes], edx
 
 ;-----------------   准备进入保护模式   -------------------
 ;1 打开A20
@@ -154,11 +154,12 @@ p_mode_start:
     mov esp, LOADER_STACK_TOP_ADDR
     mov ax,  SELECTOR_VIDEO
     mov gs,  ax
-    jmp $
+    
+
+call prepare_page_table
 
 
-
-
+jmp  $
 
 
 
@@ -168,7 +169,7 @@ p_mode_start:
 ; 最后一个页目录指向自己 这样可以通过访问最后一个内存块去操作页目录本身(本身也会参与到分页中)
 ; 预期总计只使用 1MB
 ; 页目录 at PAGE_DIR_BASE_ADDR_IN_MEM=0x100000
-init_page_table_dir_mem:
+prepare_page_table:
     ; 页表目录的大小占用物理页面 4KB
     mov ecx, 4096
     xor esi, esi
