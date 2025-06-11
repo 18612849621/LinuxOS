@@ -163,12 +163,15 @@ sgdt [gdt_ptr]
 mov  ebx,                    [gdt_ptr + 2]
 ; dword 4 bytes 因为开启了分页 + 保护模式 所以需要偏移到真实的内核空间
 ; 视频段是第 3 个段描述符，每个描述符是 8 字节，故 0x18 = 24
-; 段描述符的高 4 字节的最高位是段基址的第 31 ~ 24 位
+; 段描述符的高 32 bit 包含段基址的高 31 ~ 24 位
 ; 0xc0000000 是 3 GB 的 start addr
+; ebx + 0x18 + 4 是修改 gdt 表中视频段描述符的高位基地址
 or   dword [ebx + 0x18 + 4], 0xc0000000
-; 更新栈基地址 & gdt表地址
+; 更新 gdt 表地址 可以用高位空间存表 并且通过分页映射到对应物理地址
 add  dword [gdt_ptr + 2],    0xc0000000
+; 栈基地址
 add  esp,                    0xc0000000
+; 完成所有基础地址的偏移
 ; 页目录给 cr3 寄存器
 mov  eax,                    PAGE_DIR_BASE_ADDR_IN_MEM
 mov  cr3,                    eax
