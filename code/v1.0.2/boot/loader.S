@@ -181,7 +181,7 @@ init_page_table_dir_mem:
     mov esi, 769
 .create_pde_for_kernal_loop:
     mov  [ebx + esi * 4], eax
-    ; 一个页表的地址跨度就是 4MB
+    ; 一个页表的地址跨度就是 4KB
     add  eax,             0x1000
     inc  esi
     loop .create_pde_for_kernal_loop

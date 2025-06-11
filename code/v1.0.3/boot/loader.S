@@ -155,9 +155,32 @@ p_mode_start:
     mov ax,  SELECTOR_VIDEO
     mov gs,  ax
     
-
+; ----------页表映射初始化------------
 call prepare_page_table
-
+; reload gdt_ptr 寄存器的结果 重新获取 gdt 从而实现更新映射
+sgdt [gdt_ptr]
+; 获取 GDT 表的存储位置 GDT界限在0 ~ 2 bytes处 所以要 +2 获取 addr
+mov  ebx,                    [gdt_ptr + 2]
+; dword 4 bytes 因为开启了分页 + 保护模式 所以需要偏移到真实的内核空间
+; 视频段是第 3 个段描述符，每个描述符是 8 字节，故 0x18 = 24
+; 段描述符的高 4 字节的最高位是段基址的第 31 ~ 24 位
+; 0xc0000000 是 3 GB 的 start addr
+or   dword [ebx + 0x18 + 4], 0xc0000000
+; 更新栈基地址 & gdt表地址
+add  dword [gdt_ptr + 2],    0xc0000000
+add  esp,                    0xc0000000
+; 页目录给 cr3 寄存器
+mov  eax,                    PAGE_DIR_BASE_ADDR_IN_MEM
+mov  cr3,                    eax
+; 设置 CR0 寄存器的 PG 位 31位
+mov  eax,                    cr0
+or   eax,                    0x80000000
+mov  cr0,                    eax
+; 重新加载 GDT
+lgdt [gdt_ptr]
+; 目前是 保护 + 分页 模式
+mov  byte [gs:166],          'V'
+mov  byte [gs:167],          0xA4
 
 jmp  $
 
@@ -165,7 +188,8 @@ jmp  $
 
 
 ; -------------页表初始化例程---------------
-; 主要将 768 ~ 1022 的页目录项指向第一个页表 因为内核的地址会映射到这个页目录索引
+; 主要将 768 ~ 1022 的页目录项映射对应的空间
+; 768 指向第一个页表 后续递增 4KB (0x1000)
 ; 最后一个页目录指向自己 这样可以通过访问最后一个内存块去操作页目录本身(本身也会参与到分页中)
 ; 预期总计只使用 1MB
 ; 页目录 at PAGE_DIR_BASE_ADDR_IN_MEM=0x100000
@@ -188,14 +212,9 @@ prepare_page_table:
     mov ebx,                                 eax
     ; or 0x7
     or  eax,                                 PAGE_P | PAGE_RW_W | PAGE_US_U
-    ; 页表表示4MB内存, 内核较小仅使用物理地址中的低 1MB 空间
-    ; 内核在进程模型中占用高 1GB 空间 (3GB, 4GB]
-    ; 第 1G 所指向地址为 (01000000_00000000_00000000_00000000 - 1)
-    ; 3G = 11000000_00000000_00000000_00000000 = 0xc0000000
-    ; 取前 10 位为 1100000000 = 0x300 = 768 (页目录项索引)
+    ; 页表表示4MB内存, 内核较小仅使用物理地址中的低 1MB 空间 
     ; 所以将页目录项 0 (0) 和 768 (0xc00) 都指向第一个页表 
     ; 768 * 4 Bytes -> 0xc00 (物理地址)
-    ; 0 ~ 4 MB 包含 1 MB 空间
     ; 由于仅使用一个页表 4MB 所以管理的空间为 [0xc0000000, 0xc03fffff]
     ; 这是为将地址映射为内核地址做准备
     mov [PAGE_DIR_BASE_ADDR_IN_MEM + 0x0],   eax
@@ -228,7 +247,7 @@ prepare_page_table:
     mov esi, 769
 .create_pde_for_kernal_loop:
     mov  [ebx + esi * 4], eax
-    ; 一个页表的地址跨度就是 4MB
+    ; 一个页表的地址跨度就是 4KB
     add  eax,             0x1000
     inc  esi
     loop .create_pde_for_kernal_loop
