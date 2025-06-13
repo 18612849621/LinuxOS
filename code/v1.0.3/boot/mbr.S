@@ -1,5 +1,5 @@
 ;主引导程序
-%include "code/v1.0.1/boot/boot.inc"
+%include "code/v1.0.3/boot/boot.inc"
 ;---------------------------------
 SECTION MBR vstart=0x7c00
     mov ax, cs
@@ -46,7 +46,7 @@ SECTION MBR vstart=0x7c00
     mov byte [gs:0x08], 'R'
     mov byte [gs:0x09], 0xA4
 
-    mov  eax, LOADER_START_SECTOR_ADDR_IN_DISK
+    mov  eax, LOADER_START_SECTOR_INDEX_IN_DISK
     mov  bx,  LOADER_BASE_ADDR_IN_MEM
     mov  cx,  LOADER_READ_SECTOR_NUM
     call rd_disk_m_16
@@ -65,7 +65,7 @@ rd_disk_m_16:
     mov al,  cl
     out dx,  al
     mov eax, esi
-; LBA 寄存器(28 bit) 确定扇区地址 LOADER_START_SECTOR_ADDR_IN_DISK 此处为 0x2 其实后面用不到
+; LBA 寄存器(28 bit) 确定扇区地址 LOADER_START_SECTOR_INDEX_IN_DISK 此处为 0x2 其实后面用不到
 ; 写入端口 0x1f3 配置 LBA 0-7位 (8 bit)
     mov dx, 0x1f3
     out dx, al
@@ -104,6 +104,7 @@ rd_disk_m_16:
     ; 状态码应该是 00001000 -> 0x08
     cmp al, 0x08
     jnz .not_ready
+
 ; 开始从 data 寄存器将数据写入到内存中
     ; 磁盘的一个扇区是 512B 一次会读取一个 word (2 Bytes) (16 bit)
     ; 要读取 cx 个扇区 所以是 cx * 512B / 2B == cx * 256 次 -> 存储到di 

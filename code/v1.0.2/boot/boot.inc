@@ -1,10 +1,10 @@
 ; -------- loader & kernel --------
 ; loader 内容从存储盘的第二个扇区开始读
-LOADER_START_SECTOR_ADDR_IN_DISK equ 0x2
+LOADER_START_SECTOR_INDEX_IN_DISK equ 0x2
 ; loader 加载到内存的基地址 mbr 的启动地址是 0x7c00
-LOADER_BASE_ADDR_IN_MEM          equ 0x900
+LOADER_BASE_ADDR_IN_MEM           equ 0x900
 ; loader 准备读入的扇区数目
-LOADER_READ_SECTOR_NUM           equ 4
+LOADER_READ_SECTOR_NUM            equ 4
 ; -------- gdt 描述符属性 --------
     ; DATA 是数据段 CODE 是代码段 VIDEO 是显存段
     ; -------------高地址--------------

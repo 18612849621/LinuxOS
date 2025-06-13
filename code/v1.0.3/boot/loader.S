@@ -37,7 +37,7 @@ LOADER_STACK_TOP_ADDR equ LOADER_BASE_ADDR_IN_MEM
     SELECTOR_VIDEO equ (0x0003 << 3) + TI_GDT + RPL0
 ; addr 0xc00 上面的 ards_num 为了对齐 让 mbr 可以直接跳转到此地址
 loader_start:
-;     ;int 0x15 eax= 0x0000E820, edx=0x534d4150 ("SMAP') 获取内存布局
+    ;int 0x15 eax= 0x0000E820, edx=0x534d4150 ("SMAP') 获取内存布局
 ;     xor ebx, ebx
 ;     mov edx, 0x534d4150
 ;     mov di,  ards_buffer
@@ -118,13 +118,13 @@ loader_start:
 ;     add edx, 0x100000 ;0x88子功能只会返回1MB以上的内存,故实际内存大小要加上1MB
 
 ; .mem_get_ok:
-;     ; 存储最大值 到 0xb00 用 xp /w 0xb00
+;     ; 存储最大值 到 0xb00 用 xp /w 0xb00 应该为 0x02000000 [32 MB]
 ;     mov [total_mem_bytes], edx
 
 ;-----------------   准备进入保护模式   -------------------
-;1 打开A20
-;2 加载gdt
-;3 将cr0的pe位置1
+    ;1 打开A20
+    ;2 加载gdt
+    ;3 将cr0的pe位置1
     ;-----------------  打开A20  ----------------
     in  al,   0x92
     or  al,   0000_0010B
@@ -154,9 +154,17 @@ p_mode_start:
     mov esp, LOADER_STACK_TOP_ADDR
     mov ax,  SELECTOR_VIDEO
     mov gs,  ax
-    
+
+; ----------kernel load mem-----------
+mov  eax,                    KERNEL_START_SECTOR_INDEX_IN_DISK
+mov  ebx,                    KERNEL_BASE_ADDR_IN_MEM
+mov  ecx,                    KERNEL_READ_SECTOR_NUM
+
+; 从硬盘读取 kernel 到内存
+call rd_disk_m_32
+
 ; ----------页表映射初始化------------
-call prepare_page_table
+call setup_page
 ; reload gdt_ptr 寄存器的结果 重新获取 gdt 从而实现更新映射
 sgdt [gdt_ptr]
 ; 获取 GDT 表的存储位置 GDT界限在0 ~ 2 bytes处 所以要 +2 获取 addr
@@ -196,7 +204,7 @@ jmp  $
 ; 最后一个页目录指向自己 这样可以通过访问最后一个内存块去操作页目录本身(本身也会参与到分页中)
 ; 预期总计只使用 1MB
 ; 页目录 at PAGE_DIR_BASE_ADDR_IN_MEM=0x100000
-prepare_page_table:
+setup_page:
     ; 页表目录的大小占用物理页面 4KB
     mov ecx, 4096
     xor esi, esi
@@ -254,4 +262,91 @@ prepare_page_table:
     add  eax,             0x1000
     inc  esi
     loop .create_pde_for_kernal_loop
+    ret
+
+; -------------------------------------
+;   从磁盘的第 n 个扇区开始顺序读取 ecx 个扇区到内存 ebx处 [32位]
+;   eax = LBA扇区号
+;   ebx = 将数据写入的内存地址 
+;   ecx = 读入的扇区数
+; -------------------------------------
+rd_disk_m_32:
+    ; 选择指定通道的 set sector count 寄存器 设置读取扇区数
+    mov esi, eax
+    mov dx,  0x1f2
+    mov al,  cl
+    out dx,  al
+    mov eax, esi
+
+; LBA 寄存器(28 bit) 确定扇区地址 KERNEL_START_SECTOR_INDEX_IN_DISK 此处为 0x9
+; 写入端口 0x1f3 配置 LBA 0-7位 (8 bit)
+    mov dx, 0x1f3
+    out dx, al
+; 写入端口 0x1f4 配置 LBA 8-15位 (8 bit) shr(shift right) 右移操作获取高位
+    mov dx,  0x1f4
+    shr eax, 8
+    out dx,  al
+; 写入端口 0x1f5 配置 LBA 16-23位 (8 bit)
+    mov dx,  0x1f5
+    shr eax, 8
+    out dx,  al
+; 写入端口 0x1f6 设置 device 寄存器的状态 里面包含磁盘寻址模式、LBA的24-27位(4 bit) 地址设置
+    mov dx,  0x1f6
+    shr eax, 8
+    ; 此处筛出 8 bit 中的后 4 位
+    and al,  0x0f
+; 根据 device 寄存器的设置 高 4 位的二进制码为 1110 表示 LBA 地址模式
+    or  al, 0xe0
+    out dx, al
+; 写入端口  0x1f7 设置 commend 寄存器 读取扇区命令
+    mov dx, 0x1f7
+    mov al, 0x20
+    out dx, al
+; 同步循环阻塞检测数据是否写完, 检查status寄存器(0x1f7) 
+    ; dx此时端口为0x1f7 nop 跑 1 clock 的空命令
+    ; status寄存器 jnz 如果cmp的条件不满足(标志寄存器为 0)则跳转
+    ; 0 -> ERR  1 表示有错误发生，错误信息见error寄存器
+    ; 3 -> DRQ  1 表示硬盘已经准备好数据，随时可以输出
+    ; 6 -> DRDY 1 表示设备就绪，等待指令
+    ; 7 -> BSY  1 表示硬盘正忙，勿扰
+.not_ready:
+    nop
+    in  al, dx
+    ; 要看第4位和第8位做mask 10001000 -> 0x88
+    and al, 0x88
+    ; 状态码应该是 00001000 -> 0x08
+    cmp al, 0x08
+    jnz .not_ready
+; 开始从 data 寄存器将数据写入到内存中
+    ; 磁盘的一个扇区是 512B 一次会读取一个 word (2 Bytes) (16 bit)
+    ; 要读取 cx 个扇区 所以是 cx * 512B / 2B == cx * 256 次 -> 存储到di 
+    mov ax, 256
+    mul cx
+    mov cx, ax
+; 准备好读取次数后开始顺序读取放入到内存中
+    mov dx, 0x1f0
+    ; data 寄存器的端口好是0x1f0
+.loop_read:
+    in   ax,    dx
+    mov  [ebx], ax
+    add  ebx,   2
+    ; 由于在实模式下偏移地址为16位,所以用bx只会访问到0~FFFFh的偏移。
+    ; 这里用 32 位主要是为了防止我们写的 0x70000 越界导致的循环破坏低地址内存
+    ; loader的栈指针为0x900,bx为指向的数据输出缓冲区,且为16位，
+    ; 超过0xffff后,bx部分会从0开始,所以当要读取的扇区数过大,待写入的地址超过bx的范围时，
+    ; 从硬盘上读出的数据会把0x0000~0xffff的覆盖，
+    ; 造成栈被破坏,所以ret返回时,返回地址被破坏了,已经不是之前正确的地址,
+    ; 故程序出会错,不知道会跑到哪里去。
+    ; 所以改为ebx代替bx指向缓冲区,这样生成的机器码前面会有0x66和0x67来反转。
+    ; 0X66用于反转默认的操作数大小! 0X67用于反转默认的寻址方式.
+    ; cpu处于16位模式时,会理所当然的认为操作数和寻址都是16位,处于32位模式时,
+    ; 也会认为要执行的指令是32位.
+    ; 当我们在其中任意模式下用了另外模式的寻址方式或操作数大小(姑且认为16位模式用16位字节操作数，
+    ; 32位模式下用32字节的操作数)时,编译器会在指令前帮我们加上0x66或0x67，
+    ; 临时改变当前cpu模式到另外的模式下.
+    ; 假设当前运行在16位模式,遇到0X66时,操作数大小变为32位.
+    ; 假设当前运行在32位模式,遇到0X66时,操作数大小变为16位.
+    ; 假设当前运行在16位模式,遇到0X67时,寻址方式变为32位寻址
+    ; 假设当前运行在32位模式,遇到0X67时,寻址方式变为16位寻址.
+    loop .loop_read
     ret

@@ -1,10 +1,17 @@
 ; -------- loader & kernel --------
-; loader 内容从存储盘的第三个扇区开始读 跳过 0~1
-LOADER_START_SECTOR_ADDR_IN_DISK equ 0x2
-; loader 加载到内存的基地址 mbr 的启动地址是 0x7c00
-LOADER_BASE_ADDR_IN_MEM          equ 0x900
-; loader 准备读入的扇区数目
-LOADER_READ_SECTOR_NUM           equ 4
+; loader 内容从存储盘的第 3 个扇区开始读 跳过 0~1
+LOADER_START_SECTOR_INDEX_IN_DISK equ 0x2
+; kernel 内容从存储盘的第 10 个扇区开始读 扇区索引是 0 开始
+KERNEL_START_SECTOR_INDEX_IN_DISK equ 0x9
+; loader 加载到内存的基地址 mbr 的启动地址是 0x900
+LOADER_BASE_ADDR_IN_MEM           equ 0x900
+; kernel 加载到内存的基地址 mbr 的启动地址是 0x70000 
+; 上限为 0x9fbff 存在 2fbff bytes = 190 KB的空间
+KERNEL_BASE_ADDR_IN_MEM           equ 0x70000
+; loader 准备读入的扇区数目 512 Bytes * 4 = 2 KB
+LOADER_READ_SECTOR_NUM            equ 4
+; kernel 准备读入的扇区数目 512 Bytes * 200 = 100 KB
+KERNEL_READ_SECTOR_NUM            equ 200
 ; -------- gdt 描述符属性 --------
     ; DATA 是数据段 CODE 是代码段 VIDEO 是显存段
     ; -------------高地址--------------
@@ -57,19 +64,14 @@ LOADER_READ_SECTOR_NUM           equ 4
     TI_GDT equ 000000_0000000000b
     TI_LDT equ 000000_0000000100b
 ; --------- 页表相关 -----------
-PAGE_DIR_BASE_ADDR_IN_MEM        equ 0x100000
+PAGE_DIR_BASE_ADDR_IN_MEM equ 0x100000
 ; 1 代表该页存在于物理内存中
-PAGE_P                           equ 00000000_00000000_00000000_00000001b
+PAGE_P                    equ 00000000_00000000_00000000_00000001b
 ; 只读
-PAGE_RW_R                        equ 00000000_00000000_00000000_00000000b
+PAGE_RW_R                 equ 00000000_00000000_00000000_00000000b
 ; 可读可写
-PAGE_RW_W                        equ 00000000_00000000_00000000_00000010b
+PAGE_RW_W                 equ 00000000_00000000_00000000_00000010b
 ; 000b 0 1 2 特权集访问
-PAGE_US_S                        equ 00000000_00000000_00000000_00000000b
+PAGE_US_S                 equ 00000000_00000000_00000000_00000000b
 ; 100b 0 1 2 3 特权集访问
-PAGE_US_U                        equ 00000000_00000000_00000000_00000100b
-; ----------- kernel 相关 ---------
-; kernel 内容从存储盘的第二个扇区开始读
-KERNEL_START_SECTOR_ADDR_IN_DISK equ 0x9
-; kernel 加载到内存的基地址 mbr 的启动地址是 0x7c00
-KERNEL_BASE_ADDR_IN_MEM          equ 0x900
+PAGE_US_U                 equ 00000000_00000000_00000000_00000100b
