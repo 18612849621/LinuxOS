@@ -37,6 +37,7 @@ LOADER_STACK_TOP_ADDR equ LOADER_BASE_ADDR_IN_MEM
     SELECTOR_VIDEO equ (0x0003 << 3) + TI_GDT + RPL0
 ; addr 0xc00 上面的 ards_num 为了对齐 让 mbr 可以直接跳转到此地址
 loader_start:
+    cli
     ;int 0x15 eax= 0x0000E820, edx=0x534d4150 ("SMAP') 获取内存布局
 ;     xor ebx, ebx
 ;     mov edx, 0x534d4150
@@ -195,7 +196,7 @@ mov  byte [gs:167],          0xA4
 
 jmp  $
 
-
+sti
 
 
 ; -------------页表初始化例程---------------
@@ -298,7 +299,7 @@ rd_disk_m_32:
 ; 根据 device 寄存器的设置 高 4 位的二进制码为 1110 表示 LBA 地址模式
     or  al, 0xe0
     out dx, al
-; 写入端口  0x1f7 设置 commend 寄存器 读取扇区命令
+    ; 读取扇区命令 写入端口 0x1f7 设置 commend 寄存器
     mov dx, 0x1f7
     mov al, 0x20
     out dx, al
@@ -323,7 +324,7 @@ rd_disk_m_32:
     mov ax, 256
     mul cx
     mov cx, ax
-; 准备好读取次数后开始顺序读取放入到内存中
+    ; 准备好读取次数后开始顺序读取放入到内存中
     mov dx, 0x1f0
     ; data 寄存器的端口好是0x1f0
 .loop_read:
