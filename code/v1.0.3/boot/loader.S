@@ -1,5 +1,8 @@
 %include "code/v1.0.3/boot/boot.inc"
 section loader vstart=LOADER_BASE_ADDR_IN_MEM
+; 为什么当初设置 LOADER_STACK_TOP_ADDR 为 LOADER_BASE_ADDR_IN_MEM
+; 因为在 loader.S 中，栈的使用是从高地址向低地址增长的
+; 与LOADER的逻辑完全不会碰撞 他是从低地址向高地址生长
 LOADER_STACK_TOP_ADDR equ LOADER_BASE_ADDR_IN_MEM
 ; --------------------GDT------------------------
     ; GDT表的起始地址 0x00000000 段界限为 0 其实就是空段 纯占位置
@@ -191,13 +194,22 @@ mov  cr0,                    eax
 ; 重新加载 GDT
 lgdt [gdt_ptr]
 ; 目前是 保护 + 分页 模式
-mov  byte [gs:166],          'V'
-mov  byte [gs:167],          0xA4
-
-jmp  $
-
+; 原作者描述由于一直处在32位下原则上不需要强制刷新
+; 经过实际测试没有以下这两句也没问题
+; 但以防万一，还是加上啦，免得将来出来莫句奇妙的问题
+;强制刷新流水线更新gdt
+jmp  SELECTOR_CODE:enter_kernel
+enter_kernel:    
+   ; 根据 ELF 的信息 将内核放入到正确的线性地址中
+   ; 则可以通过程序入口 0xc0001500 去执行内核代码
+   call kernel_load_by_elf
+   ; 栈是从高地址->低地址增长的
+   ; 可用的空间最大为 0xc009fc00 根据原作者为了后续 pcb 定义 4KB(0xfff)对齐
+   ; 所以定义栈底空间为 0xc009f000 方便对齐
+   mov  esp, 0xc009f000
+   ; kernel 逻辑进入地址 0xc0001500 通过页表映射回到 0x1500 物理地址
+   jmp  KERNEL_ENTRY_POINT
 sti
-
 
 ; -------------页表初始化例程---------------
 ; 主要将 768 ~ 1022 的页目录项映射对应的空间
@@ -351,3 +363,83 @@ rd_disk_m_32:
     ; 假设当前运行在32位模式,遇到0X67时,寻址方式变为16位寻址.
     loop .loop_read
     ret
+
+kernel_load_by_elf:
+    ; 初始化所有通用寄存器
+    xor eax, eax
+    xor ebx, ebx
+    xor ecx, ecx
+    xor edx, edx
+    ; 解析 elf 文件头 并做相应初始化
+    ; bx -> 记录 program header 的线性地址
+    ; cx -> 记录 program header 的数量
+    ; dx -> 记录 program header 的大小
+    ; 文件 42 字节处的属性是 e_phentsize (2 Bytes) 表示 program header 大小
+    mov dx,  [KERNEL_BASE_ADDR_IN_MEM + 42]
+    ; 偏移文件开始部分 28 字节的地方是 e_phoff (4 Bytes), 表示第1个 program header在文件中的偏移量
+    mov ebx, [KERNEL_BASE_ADDR_IN_MEM + 28]
+    add ebx, KERNEL_BASE_ADDR_IN_MEM
+    ; 偏移文件开始部分 44 字节的地方是 e_phnum (2 Bytes),表示有几个 program header
+    mov cx,  [KERNEL_BASE_ADDR_IN_MEM + 44]
+.scan_each_program_segment:
+    ; 类型不对则直接跳过
+    cmp  byte [ebx + 0], PT_NULL
+    ; JE 和 JZ 都是判断 ZF 是不是 1 ZF 状态由操作数1 - 操作数2的结果决定
+    ; 如果 ZF = 1 则说明操作数1 == 操作数2 即计算结果为 0
+    jz   .next_program_header
+    ; 当 p_memsz > p_filesz 时​​：
+    ; 多出的部分（p_memsz - p_filesz）在文件中​​不占用实际空间​​，但在内存中会被分配并​​初始化为0​​
+    ; ​原因​​：ELF 通过此机制支持未初始化数据（.bss节）的高效存储
+    ; 为函数 memcpy 压入参数, 参数是从右往左依然压入, 解决变长参数问题，这样可以解析
+    ; 函数原型类似于 memcpy(dst, src, size)
+    ; ELF 的 program header 信息都是根据文件本身定义的, 相当于给一段二进制定义了 meta
+    ; 允许用户去解析 前两个参数确定拷贝的字节量和拷贝的地址 第三个参数决定执行程序在虚拟空间的位置 所以一个进程的虚拟空间只有一个 main 函数 
+    ; 是一段逻辑唯一的执行入口 __start = 0xc0001500
+    ; 具体的内存编排都是语言编译器帮忙配置
+    ; program header 中偏移 16 字节的地方是 p_filesz, 压入函数 memcpy 的第三个参数: size
+    push dword [ebx + 16]
+    ; program header 中通过 p_offset 进行判断，只是通过 PROGRAM_BASE_ADDR + p_offset 确定基础地址，压入函数 memcpy 的第三个参数: src = PROGRAM_BASE_ADDR + p_offset
+    mov  eax,            KERNEL_BASE_ADDR_IN_MEM
+    add  eax,            [ebx + 4]
+    push eax
+    ; program header 中偏移 8 字节的地方是 p_vaddr, 压入函数 memcpy 的第三个参数: dst
+    ; p_vaddr 表示程序在内存中的虚拟地址
+    push dword [ebx + 8]
+    call mem_cpy
+     ; 清理栈空间 3 * 4 Bytes = 12 Bytes
+    add esp, 12
+.next_program_header:
+    ; 在 ELF（Executable and Linkable Format）文件格式中，​​所有 program header 的大小是相同的​​，这是由 ELF 规范强制要求的
+    add  ebx, edx
+    loop .scan_each_program_segment
+    ret
+;----------  逐字节拷贝 mem_cpy (dst,src,size) ------------
+;输入:栈中三个参数 (dst,src,size)
+;输出:无
+;---------------------------------------------------------
+mem_cpy:
+    ; cld 是指 clean direction，该指令是将 eflags 寄存器中的方向标志位DF置为0，这样rep在循环执行后面的字符串指令时，[e]si 和[e]di 根据使用的字符串搬运指令，自动加上所搬运数据的字节大小，这是 由CPU自动完成的，不用人工干预。比如执行一次 movsd, [e]si 和 [e]di 就自动加4，执行一次 movsb, [e]si 和 [e]di 就自动加 1。有清除方向标志位就会有设置方向标志位，std 是set direction，该指令是将方向标志位 DF 置为 1，每次rep循环执行后面字符串指令时，[e]si 和[e]di 自动减去所搬运数据的字节大小
+    cld
+    ; 函数原型 memcpy(dst, src, size)
+    ; 保存栈顶地址
+    push ebp
+    ; 更新栈顶给 ebp 这样可以访问 新的局部变量(+) + 参数(-)
+    mov  ebp, esp
+    ; 外面用到了 ecx 所以我要保护一下现场
+    push ecx
+    ; 32 位系统中 call 一个函数会占用 4 个字节的栈空间
+    ; 假设所有的参数都是 4 字节则 ebp目前在新的栈顶, 且我们保存了一个 ecx 到栈中
+    ; ecx 4 Bytes 则第一个参数 dst 在栈顶 ebp + 8
+    ; 所以 dst = ebp + 8 ｜ src = ebp + 12 ｜ size = ebp + 16
+    mov  edi, [ebp + 8]  ; dst
+    mov  esi, [ebp + 12] ; src
+    mov  ecx, [ebp + 16] ; size 
+    ; 根据 ecx 逐字节拷贝 ds:[e]si -> es:[e]di
+    rep movsb 
+    ; 恢复现场
+    pop  ecx
+    pop  ebp
+    ret
+
+
+

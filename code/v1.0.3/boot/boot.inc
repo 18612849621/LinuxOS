@@ -12,6 +12,9 @@ KERNEL_BASE_ADDR_IN_MEM           equ 0x70000
 LOADER_READ_SECTOR_NUM            equ 4
 ; kernel 准备读入的扇区数目 512 Bytes * 200 = 100 KB
 KERNEL_READ_SECTOR_NUM            equ 200
+; kernel 逻辑进入地址 通过页表映射回到 0x1500 物理地址
+KERNEL_ENTRY_POINT                equ 0xc0001500
+
 ; -------- gdt 描述符属性 --------
     ; DATA 是数据段 CODE 是代码段 VIDEO 是显存段
     ; -------------高地址--------------
@@ -75,3 +78,5 @@ PAGE_RW_W                 equ 00000000_00000000_00000000_00000010b
 PAGE_US_S                 equ 00000000_00000000_00000000_00000000b
 ; 100b 0 1 2 3 特权集访问
 PAGE_US_U                 equ 00000000_00000000_00000000_00000100b
+; ------------ programe header ------------
+PT_NULL                   equ 0x00
