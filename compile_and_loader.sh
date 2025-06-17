@@ -2,7 +2,7 @@
 # 定义构建参数变量
 OUTPUT_IMG="hd60.img"
 BLOCK_SIZE=512
-VERSION=v1.0.3
+VERSION=v1.0.4
 
 # mbr load 到磁盘的第 1 个扇区
 nasm -o code/$VERSION/boot/mbr.bin code/$VERSION/boot/mbr.S
