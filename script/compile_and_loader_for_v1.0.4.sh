@@ -15,9 +15,9 @@ nasm -o $BUILD_DIR/mbr.bin code/$VERSION/boot/mbr.S
 nasm -o $BUILD_DIR/loader.bin code/$VERSION/boot/loader.S
 # =================kernel================
 ## lib 编译
-nasm -f elf32 -o $BUILD_DIR/print.o code/$VERSION/lib/kernel/print.S
+nasm code/$VERSION/lib/kernel/print.S -f elf32 -o $BUILD_DIR/print.o
 ## main.c 编译
-x86_64-elf-gcc code/$VERSION/kernel/main.c -I code/$VERSION/lib/kernel -c -o $BUILD_DIR/main.o -m32
+x86_64-elf-gcc code/$VERSION/kernel/main.c -I code/$VERSION/lib -c -o $BUILD_DIR/main.o -m32
 ## link lib.o & main.o
 x86_64-elf-ld $BUILD_DIR/main.o $BUILD_DIR/print.o -Ttext 0xc0001500 -e main -o $BUILD_DIR/kernel.bin -m elf_i386
 

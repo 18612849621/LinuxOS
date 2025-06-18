@@ -65,6 +65,6 @@ put_char:
 .is_backspace:
 .put_other:
 .set_cursor:
-.put_char_done: 
+.put_char_done:
     popad
     ret
