@@ -7,7 +7,9 @@ SELECTOR_VIDEO equ (0x0003 << 3) + RPL0 +TI_GDT
 [bits 32]
 section .text
 ;------------------------   put_char   -----------------------------
-;功能描述:把栈中的1个字符写入光标所在处
+; 功能描述:把栈中的1个字符写入光标所在处
+; 采用 80 x 25 的文本模式
+; 一行 80 个字符, 共 25 行
 ;-------------------------------------------------------------------   
 global  put_char
 put_char:
@@ -49,22 +51,88 @@ put_char:
     ; 入参为字符 void put_char(uint8_t char_asci);
     ; 所以 esp + 36 (esp 是栈顶指针) +32 处是返回的函数地址 +36 就是第一个入参
     mov ecx, [esp + 36]
-    ; ​​CR(Carriage Return，回车) ​​​作用​​: 将光标或打印头移动到​​当前行的起始位置​​（行首），不换行 ​ASCII 编码​​: 十六进制 0x0D（十进制 13），转义字符为 \r
-    ; ​LF(Line Feed，换行)​​ ​作用​​: 将光标或打印头​​垂直移动到下一行​​，但​​不改变水平位置​​（列位置不变）
-    ; ​ASCII 编码​​: 十六进制 0x0A（十进制10）转义字符为 \n。
+    ; CR 和 LF 都统一处理成换到下一行的行首
+    ; ​​CR(Carriage Return，回车) ​​ ​ASCII 编码​​: 十六进制 0x0D（十进制 13），转义字符为 \r
     cmp cl,  0xd
     jz  .is_carriage_return
+    ; ​LF(Line Feed，换行)​​ 
+    ; ​ASCII 编码​​: 十六进制 0x0A（十进制10）转义字符为 \n。
     cmp cl,  0xa
     jz  .is_line_feed
-    ; 空格 0x8
+    ; BS(backspace)的 ascii 码是8
     cmp cl,  0x8
     jz  .is_backspace
     jmp .put_other
+.is_backspace:
+    ;====================backspace的说明=================
+    ; 当为 backspace 时, 本质上只要将光标移向前一个显存位置即可 后面再输入的字符自然会覆盖此处的字符
+    ; 但有可能在键入 backspace 后并不再键入新的字符,这时在光标已经向前移动到待删除的字符位置, 但字符还在原处
+    ; 这就显得好怪异, 所以此处添加了空格
+    ; 边界检查需要判断 bx 是否为 0 若是直接退出
+    cmp bx,           0
+    jz  .put_char_done
+    ; 将 bx [光标索引] 减 1, 使光标向前移动一个字符位置
+    dec bx
+    ; 现在 bx 存储的是光标的索引, 需要将其转换为显存地址
+    ; 显存地址 = 光标索引 * 2 (因为每个字符占用 2 Bytes)
+    shl bx,           1
+    mov byte [gs:bx], 0x20
+    inc bx
+    mov byte [gs:bx], 0x07
+    ; 还原 bx 为回退一格字符的索引
+    shr bx,           1
+    jmp .set_cursor
+.put_other:
+    ; 将读取到的字符放入 gs:bx 光标出
+    ; 因为 bx 存的是光标的索引 光标大小为 2 Bytes 所以需要 * 2 (bx << 1)
+    shl bx,           1
+    mov [gs:bx],      cl
+    ; 字符为 0x07 (0000_0111) 白字 黑底 不闪烁 不高亮
+    inc bx
+    mov byte [gs:bx], 0x07
+    ; 获取下一个光标的位置索引 只需要 (cursor + 1) / 2 就行 
+    inc bx
+    shr bx,           1
+    ; bx 现在存的是下一个光标位置的索引 需要判断是否 < 2000
+    ; >= 2000 的话就需要回到最初
+    cmp bx,           2000
+    jl  .set_cursor
 .is_carriage_return:
 .is_line_feed:
-.is_backspace:
-.put_other:
+    ; 这里用 16 位除法就行
+    ; ax 存商 dx 存余数
+    xor dx, dx
+    mov ax, bx
+    mov si, 80
+    div si
+    ; 上面算出目前在第几行存在 ax 中
+    ; 余数就是在当前行的第几列存在 bx 中 因为是行存所以需要 bx - dx 就是我们当前行的起始位置
+    sub bx, dx
+.is_line_feed_end:
+    ; 现在 bx 存储的是当前行的起始位置
+    ; 只需要将 bx + 80 就是下一行的起始位置
+    add bx, 80
+    cmp bx, 2000
+    jl  .set_cursor
 .set_cursor:
+    ; ==============设置光标位置==============
+    ; bx 是光标需要设置的索引
+    ; 高地址索引 0Eh 填充到索引寄存器 0x3d4
+    mov dx, 0x3d4
+    mov al, 0x0e
+    out dx, al
+    ; 将 bx 中存储的高 8 位写入到数据寄存器 0x3d5
+    mov dx, 0x3d5
+    mov al, bh
+    out dx, al
+    ; 低地址索引 0Fh 填充到索引寄存器 0x3d4
+    mov dx, 0x3d4
+    mov al, 0x0f
+    out dx, al
+    ; 将 bx 中存储的低 8 位写入到数据寄存器 0x3d5
+    mov dx, 0x3d5
+    mov al, bl
+    out dx, al
 .put_char_done:
     popad
     ret
