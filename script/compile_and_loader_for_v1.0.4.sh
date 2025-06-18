@@ -17,11 +17,9 @@ nasm -o $BUILD_DIR/loader.bin code/$VERSION/boot/loader.S
 ## lib 编译
 nasm -f elf32 -o $BUILD_DIR/print.o code/$VERSION/lib/kernel/print.S
 ## main.c 编译
-x86_64-elf-gcc code/$VERSION/kernel/main.c -c -o $BUILD_DIR/main.o -m32
-## link
-### -Text 0xc0001500 指定代码初始执行的虚拟地址 [规约]
-### -e main 指定 main 作为程序入口 绑定到虚拟地址 0xc0001500
-x86_64-elf-ld $BUILD_DIR/main.o -Ttext 0xc0001500 -e main -o $BUILD_DIR/kernel.bin -m elf_i386
+x86_64-elf-gcc code/$VERSION/kernel/main.c -I code/$VERSION/lib/kernel -c -o $BUILD_DIR/main.o -m32
+## link lib.o & main.o
+x86_64-elf-ld $BUILD_DIR/main.o $BUILD_DIR/print.o -Ttext 0xc0001500 -e main -o $BUILD_DIR/kernel.bin -m elf_i386
 
 if [ "$WRITE_BIN_TO_DISK" = true ]; then
     # ================写入磁盘===============
