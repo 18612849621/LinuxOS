@@ -7,8 +7,10 @@ int main(void) {
   put_char('n');
   put_char('e');
   put_char('l');
-  put_char('\n');
-  put_char('\n');
+  int i = 0;
+  for (i = 0; i < 10; i++) {
+    put_char('\n');
+  }
   put_char('k');
   put_char('e');
   put_char('r');

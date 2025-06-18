@@ -97,8 +97,8 @@ put_char:
     ; >= 2000 的话就需要回到最初
     cmp bx,           2000
     jl  .set_cursor
-.is_carriage_return:
 .is_line_feed:
+.is_carriage_return:
     ; 这里用 16 位除法就行
     ; ax 存商 dx 存余数
     xor dx, dx
@@ -108,12 +108,36 @@ put_char:
     ; 上面算出目前在第几行存在 ax 中
     ; 余数就是在当前行的第几列存在 bx 中 因为是行存所以需要 bx - dx 就是我们当前行的起始位置
     sub bx, dx
-.is_line_feed_end:
     ; 现在 bx 存储的是当前行的起始位置
     ; 只需要将 bx + 80 就是下一行的起始位置
     add bx, 80
     cmp bx, 2000
     jl  .set_cursor
+; ================统一处理越界后的逻辑==============
+; 因为越界一定会走 CR 和 LF 的逻辑
+; 屏幕行范围是 0~24
+; 若超出屏幕大小，开始滚屏
+.roll_screen: 
+; 滚屏的原理是将屏幕的 1~24 行搬运到 0~23 行, 再将第 24 行用空格填充
+; 1~24 行一共需要搬运 1920 (24 * 80) 字符 一共 3840 Bytes
+; rep movsd 一次 4 Bytes 所以循环 3840 / 4 = 960
+    mov ecx, 960
+    ; 第 0 行
+    mov edi, 0xb8000
+    ; 第 1 行 80 * 2 = 160 Bytes
+    mov esi, 0xb80a0
+    rep movsd
+    ; 最后一行的开始字节 offset 是 3840 Bytes
+    ; 填充整行为空白
+    mov ebx, 3840
+    mov ecx, 80
+.cls:
+    ; 0x0720是黑底白字的空格键
+    mov  word [gs:ebx], 0x0720
+    add  bx,            2
+    loop .cls
+    ; reset 到最后一行的行首
+    mov  bx,            1920
 .set_cursor:
     ; ==============设置光标位置==============
     ; bx 是光标需要设置的索引
