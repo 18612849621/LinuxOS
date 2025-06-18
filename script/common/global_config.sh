@@ -1,0 +1,4 @@
+OUTPUT_IMG="hd60.img"
+BLOCK_SIZE=512
+BUILD_DIR="build"
+WRITE_BIN_TO_DISK=true
