@@ -4,14 +4,47 @@ SELECTOR_VIDEO equ (0x0003 << 3) + RPL0 +TI_GDT
 
 ;默认情况下，MiscellaneousOutput Register 奇存器的值为 0x67(0110_0111)，其他字段不管，只关注这最重要的 I/OAS 位其值为 1
 ;所以 CRTcontroller 寄存器组的 AddressRegister 的端口地址为 0x3D4, Data Register 的端口地址 0x3D5
+; put_char 和 put_str 函数都是用 ecx 传递字符内容
 [bits 32]
 section .text
+;------------------------   put_str   ------------------------------
+; 通过 put_char 来打印以0字符结尾的字符串
+; 输入：栈中参数为打印的字符串
+; 输出：无
+; 背景：'\0' 的ASCII码为 0，所以很多字符串函数内部都通过把各个字符与 '\0' 比较来判断字符串是否结束
+;-------------------------------------------------------------------  
+global  put_str
+put_str:
+    ; 用到了 ebx 和 ecx 保护现场
+    push ebx
+    push ecx
+    xor  ecx, ecx
+    ; 字符串在栈中指针所指向的地址 
+    ; [esp + 12] 跳过 ecx -> ebx -> 函数返回地址 -> str
+    mov  ebx, [esp + 12]
+.next_char:
+    mov  cl,  [ebx]
+    cmp  cl,  0
+    jz   .str_end
+    push ecx
+    call put_char
+    ; 帮忙弹出入参字符串
+    add  esp, 4
+    ; 下一个字符
+    inc  ebx
+    jmp  .next_char
+.str_end:
+    ; 恢复现场
+    pop ecx
+    pop ebx
+    ret
+
 ;------------------------   put_char   -----------------------------
 ; 功能描述:把栈中的1个字符写入光标所在处
 ; 采用 80 x 25 的文本模式
 ; 一行 80 个字符, 共 25 行
 ;-------------------------------------------------------------------   
-global  put_char
+global put_char
 put_char:
     ; 这里省略一组指令
     ; push ebp
