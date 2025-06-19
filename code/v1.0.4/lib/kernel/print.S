@@ -6,6 +6,10 @@ SELECTOR_VIDEO equ (0x0003 << 3) + RPL0 +TI_GDT
 ;所以 CRTcontroller 寄存器组的 AddressRegister 的端口地址为 0x3D4, Data Register 的端口地址 0x3D5
 ; put_char 和 put_str 函数都是用 ecx 传递字符内容
 [bits 32]
+section .data
+; buffer_for_convert_int_to_ascii 用于转换后的 ascii 码
+; 为什么申请 8 字节？因为 32 位整数转换为 16 进制字符串最多需要 8 个字符（0-9, A-F），每个字符占用 1 字节
+buffer_for_convert_int_to_ascii dq 0
 section .text
 ;------------------------   put_str   ------------------------------
 ; 通过 put_char 来打印以0字符结尾的字符串
@@ -191,5 +195,86 @@ put_char:
     mov al, bl
     out dx, al
 .put_char_done:
+    popad
+    ret
+
+;--------------------   put_int   -----------------------
+; 将小端字节序的数字变成对应的 ascii 后，倒置
+; 输入：栈中参数为待打印的数字
+; 输出：在屏幕上打印 16 进制数字,并不会打印前缀 0x, 如打印 10 进制 15 时，只会直接打印 f，不会是 0xf
+; 32 位系统只能是 8 位的 16 进制数
+; 例子：put_int(0x12345678) -> 栈[esp + 36]中存储 低 0x78 0x56 0x34 0x12 高
+; 因为 pushad 是存储 8 个寄存器 + 一个地址就是 9 个 4 Bytes (36) 的整数
+; 这个实现不是最优的 是最好理解的 :)
+;------------------------------------------------------------------------------------------
+global put_int
+put_int:
+    pushad
+    mov ebp, esp
+    ; 获取待打印的整数 4 字节
+    ; 用 eax 存储原数据 方便后续遍历下一位
+    ; 用 edx 处理当前位
+    mov eax, [ebp + 36]
+    mov edx, eax
+    mov ecx, 8
+    ; 存储当前所处理位置的偏移索引
+    mov edi, 7
+    ; 由于存储按照 0x78 0x56 0x34 0x12 打印需要按照 0x12 0x34 0x56 0x78
+    ; 所以遍历 int 的时候是栈的低位放到buffer高位
+    ; 大端序的优势就是容易判断高位索引为 base 地址 + 7 也就是 [edx + edi]
+    ; 这样在 buffer 中容易处理 0x000042 的开头 0 的情况
+    mov ebx, buffer_for_convert_int_to_ascii
+.parse_low4bit:
+    ; 低位 mask
+    and edx, 0x0000000f
+    ; 区分 0-9 和 A-F
+    cmp edx, 9
+    jg  .is_A2F
+    add edx, '0'
+    jmp .store_to_buffer
+.is_A2F:
+    ; 专门处理 A-F 的情况
+    ; 比如数据 A 就是 10 减去 10 的话 就相当于是 A-F 的索引了
+    sub edx, 10
+    add edx, 'A'
+.store_to_buffer:
+    ; 小端序写到大端序，栈的低位数据写入到 buffer 的高位
+    mov  byte [buffer_for_convert_int_to_ascii + edi], dl
+    dec  edi
+    ; 因为 16 进制 4 bit 为一个数字 所以右移 4 位
+    shr  eax,                                          4
+    mov  edx,                                          eax
+    loop .parse_low4bit
+ready_to_print:
+    ; 循环 8 次后 edi 会被搞到 0xffffffff(-1) 所以 +1 恢复到 0
+    ; 到这里 ecx 应该都是 0
+    inc edi
+.bound_check:
+    cmp edi, 8
+    jz  .full0
+; 找出第一个非 0 的字符
+.find_not_zero:
+    mov byte cl, [buffer_for_convert_int_to_ascii + edi]
+    ; 不判断结果直接找到下一个
+    inc edi
+    ; 0 就跳过检测边界
+    cmp cl,      '0'
+    jz  .bound_check
+    ; 相当于找到了非零 由于前面无脑给 edi + 1 所以这里要 edi - 1
+    dec edi
+    ; 非 0 准备打印
+    jmp .put_each_num
+.full0:
+    mov cl, '0'
+.put_each_num:
+    push ecx
+    call put_char
+    ; 调用栈清理
+    add  esp, 4
+    ; 更新下一个字符
+    inc  edi
+    mov  cl,  byte [buffer_for_convert_int_to_ascii + edi]
+    cmp  edi, 8
+    jl   .put_each_num
     popad
     ret
