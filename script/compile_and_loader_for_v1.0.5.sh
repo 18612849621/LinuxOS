@@ -25,9 +25,11 @@ x86_64-elf-gcc code/$VERSION/kernel/main.c -I code/$VERSION/lib -I code/$VERSION
 ### interrupt
 x86_64-elf-gcc code/$VERSION/kernel/interrupt.c -I code/$VERSION/lib -I code/$VERSION/kernel -I code/$VERSION/lib/kernel -c -fno-builtin -o $BUILD_DIR/interrupt.o -m32
 ### init
-x86_64-elf-gcc code/$VERSION/kernel/init.c -I code/$VERSION/lib -I code/$VERSION/kernel -I code/$VERSION/lib/kernel -c -fno-builtin -o $BUILD_DIR/init.o -m32
+x86_64-elf-gcc code/$VERSION/kernel/init.c -I code/$VERSION/lib -I code/$VERSION/kernel -I code/$VERSION/lib/kernel -I code/$VERSION/device -c -fno-builtin -o $BUILD_DIR/init.o -m32
+### timer
+x86_64-elf-gcc code/$VERSION/device/timer.c -I code/$VERSION/lib -I code/$VERSION/kernel -I code/$VERSION/lib/kernel -c -fno-builtin -o $BUILD_DIR/timer.o -m32
 ## link
-x86_64-elf-ld $BUILD_DIR/main.o $BUILD_DIR/print.o $BUILD_DIR/kernel.o $BUILD_DIR/interrupt.o $BUILD_DIR/init.o -Ttext 0xc0001500 -e main -o $BUILD_DIR/kernel.bin -m elf_i386
+x86_64-elf-ld $BUILD_DIR/main.o $BUILD_DIR/print.o $BUILD_DIR/kernel.o $BUILD_DIR/interrupt.o $BUILD_DIR/init.o $BUILD_DIR/timer.o -Ttext 0xc0001500 -e main -o $BUILD_DIR/kernel.bin -m elf_i386
 
 if [ "$WRITE_BIN_TO_DISK" = true ]; then
     # ================写入磁盘===============
