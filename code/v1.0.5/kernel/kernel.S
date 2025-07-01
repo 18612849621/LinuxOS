@@ -4,38 +4,55 @@
 ; 相关的异常中 cpu 没有压入错误码, 为了统一栈中格式, 就手工压入一个 0
 %define ZERO       push 0
 
-; 声明函数
-extern  put_str
+; ;idt_table 是 C 中注册的中断处理程序数组
+extern  idt_table
 
 section .data
-; 定义字符串常量，包含中断提示信息和换行符 0xa 、终止符 0
-intr_str db "interrupt occur!", 0xa, 0
+
 global  intr_entry_table
 ; 全局符号，用于存储所有中断入口地址的数组（由宏生成）
 intr_entry_table:
-
 %macro VECTOR 2
 section .text
 ; 每个中断处理程序都要压入中断向量号,所以一个中断类型一个中断处理程序，自己知道自己的中断向量号是多少
 intr%1entry:
     %2
-    push intr_str
-    call put_str
-    add  esp,  4    ; 弹出入参数
-    ; EOI 中断处理结束标志 会清除状态
-    ; 如果是从片上进入的中断, 除了往从片上发送 EOI 外,还要往主片上发送 EOI 
-    ; 所以简化每次都发送 EOI(0x20) 手动模式 8259A 主片 0x20 从片 0xA0
-    mov  al,   0x20
-    out  0x20, al
-    out  0xa0, al
-    ; 跨过error_code -- %2
-    add  esp,  4
-    ; 返回, 32位下等同指令iretd 用于从中断服务程序（ISR）返回到被中断的代码
-    iret
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+    ; 传入 8 bit 中断号
+    push %1
+    ; 调用idt_table中的 C 版本中断处理函数
+    call [idt_table + %1 * 4]
+    jmp  intr_exit
+
 section .data
     ; 制作 intr_entry_table 数组 存储中断程序
-dd intr%1entry
+    dd intr%1entry
 %endmacro
+
+section .text
+global  intr_exit
+intr_exit:
+    add esp,  4    ; 弹出入参数
+    ; 中段程序处理完成发送 EOI
+    ; EOI 中断处理结束标志会清除状态
+    ; 如果是从片上进入的中断, 除了往从片上发送 EOI 外,还要往主片上发送 EOI 
+    ; 所以简化每次都发送 EOI(0x20) 手动模式 8259A 主片 0x20 从片 0xA0
+    mov al,   0x20
+    out 0x20, al
+    out 0xa0, al
+    ; 恢复现场
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ; 跨过error_code 对应 %2 的数据
+    add esp,  4
+    iretd
 
 VECTOR 0x00, ZERO
 VECTOR 0x01, ZERO
