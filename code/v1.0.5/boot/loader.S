@@ -1,4 +1,4 @@
-%include "code/v1.0.5/boot/boot.inc"
+%include "boot/boot.inc"
 section loader vstart=LOADER_BASE_ADDR_IN_MEM
 ; 为什么当初设置 LOADER_STACK_TOP_ADDR 为 LOADER_BASE_ADDR_IN_MEM
 ; 因为在 loader.S 中，栈的使用是从高地址向低地址增长的

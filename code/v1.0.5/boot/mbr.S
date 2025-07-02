@@ -1,5 +1,5 @@
 ;主引导程序
-%include "code/v1.0.5/boot/boot.inc"
+%include "boot/boot.inc"
 ;---------------------------------
 SECTION MBR vstart=0x7c00
     mov ax, cs
