@@ -9,14 +9,17 @@ CC := x86_64-elf-gcc
 LD := x86_64-elf-ld
 LIB := -I lib/ -I kernel/ -I device/ -I lib/kernel/
 ASFLAGS := -f elf32 # 编译成 x86 架构 32 位 elf
-CFLAGS := -fno-builtin -c -Wall -m32
-LDFLAGS := -m elf_i386 -Ttext $(ENTRY_POINT) -e main
+# debug
+CFLAGS := -fno-builtin -c -Wall -m32 -W -Wstrict-prototypes -Wmissing-prototypes -DDEBUG
+# online
+# CFLAGS := -fno-builtin -c -Wall -m32 -W -Wstrict-prototypes -Wmissing-prototypes
+LDFLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main
 # 启动所需对象
 STARTUP = $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin
 # Kernel
-OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/init.o $(BUILD_DIR)/timer.o
+OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/init.o $(BUILD_DIR)/timer.o $(BUILD_DIR)/debug.o
 # 伪目标声明
-.PHONY: build_dir_init clean send_program_to_disk
+.PHONY: build_dir_init clean send_program_to_disk build
 # ======================== FUNC ========================
 # 初始化 build 目录
 build_dir_init:
@@ -29,7 +32,7 @@ build_dir_init:
 	fi
 # 清理 build 目录
 clean:
-	@rm -rf build
+	@echo 😴
 # 拷贝程序到磁盘
 # MBR 到磁盘的第 1 个扇区
 # LOADER 到磁盘的第 3 个扇区
@@ -38,6 +41,7 @@ send_program_to_disk:
 	@dd if=$(BUILD_DIR)/mbr.bin of=$(IMAGE_OUTPUT_DIR) bs=$(BLOCK_SIZE) count=1 conv=notrunc && \
   dd if=$(BUILD_DIR)/loader.bin of=$(IMAGE_OUTPUT_DIR) bs=$(BLOCK_SIZE) count=4 seek=2 conv=notrunc && \
   dd if=$(BUILD_DIR)/kernel.bin of=$(IMAGE_OUTPUT_DIR) bs=$(BLOCK_SIZE) count=200 seek=9 conv=notrunc
+build: $(BUILD_DIR)/kernel.bin
 # ======================== 汇编 =========================
 # start
 $(BUILD_DIR)/mbr.bin: boot/mbr.S
@@ -56,10 +60,14 @@ $(BUILD_DIR)/init.o: kernel/init.c
 	$(CC) $(LIB) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/timer.o: device/timer.c
 	$(CC) $(LIB) $(CFLAGS) $< -o $@
+$(BUILD_DIR)/debug.o: kernel/debug.c
+	$(CC) $(LIB) $(CFLAGS) $< -o $@
 $(BUILD_DIR)/main.o: kernel/main.c
 	$(CC) $(LIB) $(CFLAGS) $< -o $@
+
 # ======================== LINK =========================
 $(BUILD_DIR)/kernel.bin: $(OBJS)
 	$(LD) $(LDFLAGS) $^ -o $@
 # ======================== MAIN =========================
-all: build_dir_init $(BUILD_DIR)/kernel.bin $(STARTUP) send_program_to_disk
+all: build_dir_init build $(STARTUP) send_program_to_disk
+	@echo "✅ Compile done."
