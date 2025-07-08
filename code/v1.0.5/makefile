@@ -17,7 +17,7 @@ LDFLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main
 # 启动所需对象
 STARTUP = $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin
 # Kernel
-OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/init.o $(BUILD_DIR)/timer.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o
+OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/init.o $(BUILD_DIR)/timer.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o
 # 伪目标声明
 .PHONY: build_dir_init clean send_program_to_disk build
 # ======================== FUNC ========================
@@ -56,6 +56,9 @@ $(BUILD_DIR)/kernel.o: kernel/kernel.S
 # ======================== C =========================
 # lib
 $(BUILD_DIR)/string.o: lib/string.c
+	$(CC) $(LIB) $(CFLAGS) $< -o $@
+# lib/kernel
+$(BUILD_DIR)/bitmap.o: lib/kernel/bitmap.c
 	$(CC) $(LIB) $(CFLAGS) $< -o $@
 # device
 $(BUILD_DIR)/timer.o: device/timer.c
